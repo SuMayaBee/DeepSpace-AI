@@ -434,6 +434,20 @@ const STAR_DATA: StarData[] = [
     color: "#9bb0ff",
     position: [44, -22, 26],
   },
+  {
+    id: "26",
+    name: "Voidstar",
+    type: "Electric Cyan Giant",
+    temperature: 15000,
+    mass: 8.5,
+    radius: 12.3,
+    distance: 420,
+    planets: ["Voidstar b", "Voidstar c"],
+    constellation: "Mysticus",
+    magnitude: 1.2,
+    color: "#00FFFF",
+    position: [-60, 45, -35],
+  },
   ...Array.from({ length: 54 }, (_, i) => {
     const starTypes = [
       { type: "M-type Red Dwarf", tempRange: [2000, 3500], color: "#FF4500", massRange: [0.08, 0.45] },
@@ -557,8 +571,12 @@ function InteractiveStar({ star }: { star: StarData }) {
   const size = hovered ? baseSize * 1.5 : baseSize
 
   const starVisuals = useMemo(() => {
+    // Special bright cyan star - impossible to miss
+    if (star.name === "Voidstar") {
+      return { color: "#00FFFF", glowColor: "#00BFFF", intensity: 3.0 }
+    }
     // Based on stellar classification chart: O, B, A, F, G, K, M types
-    if (star.name === "Sun" || star.type?.includes("G-type")) {
+    else if (star.name === "Sun" || star.type?.includes("G-type")) {
       // G-type: Yellow stars like our Sun (5,000-6,000K)
       return { color: "#FFFF00", glowColor: "#FFFF66", intensity: 1.0 }
     } else if (star.type?.includes("O-type")) {
@@ -734,7 +752,6 @@ function InteractiveStar({ star }: { star: StarData }) {
           color="white"
           anchorX="center"
           anchorY="middle"
-          font="/fonts/Geist-Regular.ttf"
         >
           {star.constellation}
         </Text>
