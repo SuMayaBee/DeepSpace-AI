@@ -42,12 +42,14 @@ interface StarStore {
   currentView: "space" | "star-system" | "focused-object"
   zoomedStar: StarData | null
   focusedObject: FocusTarget | null
+  isFilterSpinning: boolean
   setSelectedStar: (star: StarData | null) => void
   setHoveredStar: (star: StarData | null) => void
   zoomToStarSystem: (star: StarData) => void
   focusOnObject: (target: FocusTarget) => void
   returnToStarSystem: () => void
   returnToSpace: () => void
+  triggerFilterSpin: () => void
 }
 
 export const useStarStore = create<StarStore>((set, get) => ({
@@ -56,6 +58,7 @@ export const useStarStore = create<StarStore>((set, get) => ({
   currentView: "space",
   zoomedStar: null,
   focusedObject: null,
+  isFilterSpinning: false,
   setSelectedStar: (star) => set({ selectedStar: star }),
   setHoveredStar: (star) => set({ hoveredStar: star }),
   zoomToStarSystem: (star) =>
@@ -84,6 +87,12 @@ export const useStarStore = create<StarStore>((set, get) => ({
       selectedStar: null,
       focusedObject: null,
     }),
+  triggerFilterSpin: () => {
+    set({ isFilterSpinning: true })
+    setTimeout(() => {
+      set({ isFilterSpinning: false })
+    }, 1500) // 1.5 second spin duration
+  },
 }))
 
 export type { StarData, PlanetData, FocusTarget }

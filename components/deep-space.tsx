@@ -763,9 +763,18 @@ function InteractiveStar({ star }: { star: StarData }) {
 export function DeepSpace() {
   // Reduce star count for better performance
   const stars = useMemo(() => STAR_DATA.slice(0, 80), [])
+  const { isFilterSpinning } = useStarStore()
+  const groupRef = useRef<THREE.Group>(null!)
+
+  useFrame((state) => {
+    if (groupRef.current && isFilterSpinning) {
+      // More pronounced spinning animation during filter transition
+      groupRef.current.rotation.y += 0.08
+    }
+  })
 
   return (
-    <group>
+    <group ref={groupRef}>
       <RealisticSpaceBackground />
       {stars.map((star) => (
         <InteractiveStar key={star.id} star={star} />
