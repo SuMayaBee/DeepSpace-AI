@@ -869,7 +869,7 @@ function StarSystemInfo({ star }: { star: StarData }) {
   }
 
   return (
-    <div className="fixed top-20 right-4 z-50 bg-cyan-900/50 text-white p-6 rounded-lg border border-cyan-400/30 backdrop-blur-sm max-w-sm">
+    <div className="fixed top-20 right-4 z-50 bg-cyan-900/20 text-white p-6 rounded-lg border border-cyan-400/30 backdrop-blur-sm max-w-sm">
       <div className="mb-6">
         <h2
           className="text-2xl font-bold mb-3 text-white cursor-pointer hover:text-cyan-400 transition-colors"
