@@ -1,9 +1,7 @@
-"use client"
-
-import { useRef, useState, useMemo } from "react"
-import { useFrame } from "@react-three/fiber"
+import { useRef, useState, useEffect, useMemo } from "react"
+import { Canvas, useFrame } from "@react-three/fiber"
 import { Html } from "@react-three/drei"
-import type * as THREE from "three"
+import * as THREE from "three"
 import { useStarStore, type StarData, type PlanetData } from "@/lib/star-store"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
@@ -33,26 +31,151 @@ const starColors = [
 
 function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; starColor: string; index: number }) {
   const planetRef = useRef<THREE.Mesh>(null!)
+  const atmosphereRef = useRef<THREE.Mesh>(null!)
+  const cloudsRef = useRef<THREE.Mesh>(null!)
+  const surfaceRef = useRef<THREE.Mesh>(null!)
   const [hovered, setHovered] = useState(false)
   const [angle, setAngle] = useState(Math.random() * Math.PI * 2)
   const { focusOnObject, zoomedStar } = useStarStore()
 
+  const isVoidstar = zoomedStar?.name === "Voidstar"
   const planetColor = planetColors[index % planetColors.length]
+
+  // Special Voidstar planet materials and colors
+  const voidstarPlanetData = useMemo(() => {
+    if (!isVoidstar) return null
+    
+    const planetTypes = [
+      { 
+        baseColor: "#0C4A6E", // Deep ocean blue
+        surfaceColor: "#0EA5E9", // Bright cyan-blue
+        atmosphereColor: "#38BDF8", 
+        emissiveColor: "#082F49",
+        cloudColor: "#E0F2FE",
+        name: "Quantum Crystal World"
+      },
+      { 
+        baseColor: "#991B1B", // Deep red base  
+        surfaceColor: "#F97316", // Bright orange
+        atmosphereColor: "#FB923C", 
+        emissiveColor: "#450A0A",
+        cloudColor: "#FED7AA",
+        name: "Exotic Gas Giant"
+      },
+      { 
+        baseColor: "#14532D", // Deep forest green
+        surfaceColor: "#22C55E", // Bright green
+        atmosphereColor: "#4ADE80", 
+        emissiveColor: "#052E16",
+        cloudColor: "#DCFCE7",
+        name: "Helium-3 Rich World"
+      },
+      { 
+        baseColor: "#92400E", // Deep amber
+        surfaceColor: "#F59E0B", // Bright amber
+        atmosphereColor: "#FbbF24", 
+        emissiveColor: "#451A03",
+        cloudColor: "#FEF3C7",
+        name: "Quantum Field Planet"
+      }
+    ]
+    
+    return planetTypes[index % planetTypes.length]
+  }, [isVoidstar, index])
 
   useFrame((state) => {
     setAngle((prev) => prev + planet.orbitSpeed * 0.01)
 
     if (planetRef.current) {
       const orbitRadius = planet.distance * 8
-      planetRef.current.position.x = Math.cos(angle) * orbitRadius
-      planetRef.current.position.z = Math.sin(angle) * orbitRadius
+      const x = Math.cos(angle) * orbitRadius
+      const z = Math.sin(angle) * orbitRadius
+      
+      planetRef.current.position.x = x
+      planetRef.current.position.z = z
       planetRef.current.position.y = 0
+
+      // Position all planet layers with main planet
+      if (atmosphereRef.current) {
+        atmosphereRef.current.position.x = x
+        atmosphereRef.current.position.z = z
+        atmosphereRef.current.position.y = 0
+      }
+      
+      if (cloudsRef.current) {
+        cloudsRef.current.position.x = x
+        cloudsRef.current.position.z = z
+        cloudsRef.current.position.y = 0
+      }
+      
+      if (surfaceRef.current) {
+        surfaceRef.current.position.x = x
+        surfaceRef.current.position.z = z
+        surfaceRef.current.position.y = 0
+      }
+
+      // Realistic planet rotation with different speeds for layers
+      planetRef.current.rotation.y += 0.005
+      
+      if (cloudsRef.current) {
+        cloudsRef.current.rotation.y += 0.008 // Clouds rotate faster
+      }
+      
+      if (surfaceRef.current) {
+        surfaceRef.current.rotation.y += 0.003 // Surface details rotate slower
+      }
 
       if (hovered) {
         const pulse = Math.sin(state.clock.elapsedTime * 4) * 0.1 + 1
         planetRef.current.scale.setScalar(pulse)
+        if (atmosphereRef.current) {
+          atmosphereRef.current.scale.setScalar(pulse)
+        }
+        if (cloudsRef.current) {
+          cloudsRef.current.scale.setScalar(pulse)
+        }
+        if (surfaceRef.current) {
+          surfaceRef.current.scale.setScalar(pulse)
+        }
       } else {
         planetRef.current.scale.setScalar(1)
+        if (atmosphereRef.current) {
+          atmosphereRef.current.scale.setScalar(1)
+        }
+        if (cloudsRef.current) {
+          cloudsRef.current.scale.setScalar(1)
+        }
+        if (surfaceRef.current) {
+          surfaceRef.current.scale.setScalar(1)
+        }
+      }
+    }
+
+    // Animate Voidstar planet layers
+    if (isVoidstar) {
+      if (atmosphereRef.current) {
+        const atmospherePulse = Math.sin(state.clock.elapsedTime * 2) * 0.1 + 0.9
+        const material = atmosphereRef.current.material as THREE.MeshStandardMaterial
+        if (material) {
+          material.opacity = 0.4 * atmospherePulse
+        }
+        atmosphereRef.current.rotation.y += 0.008
+      }
+      
+      if (cloudsRef.current) {
+        const cloudPulse = Math.sin(state.clock.elapsedTime * 1.5 + 1) * 0.15 + 0.85
+        const cloudMaterial = cloudsRef.current.material as THREE.MeshStandardMaterial
+        if (cloudMaterial) {
+          cloudMaterial.opacity = 0.7 * cloudPulse
+        }
+      }
+      
+      if (surfaceRef.current) {
+        const surfacePulse = Math.sin(state.clock.elapsedTime * 0.8) * 0.05 + 0.95
+        const surfaceMaterial = surfaceRef.current.material as THREE.MeshStandardMaterial
+        if (surfaceMaterial) {
+          surfaceMaterial.emissiveIntensity = 0.1 * surfacePulse
+        }
       }
     }
   })
@@ -67,6 +190,7 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
 
   return (
     <>
+      {/* Main planet core */}
       <mesh
         ref={planetRef}
         onPointerEnter={() => {
@@ -79,9 +203,75 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
         }}
         onClick={handlePlanetClick}
       >
-        <sphereGeometry args={[planet.radius * 2, 16, 16]} />
-        <meshBasicMaterial color={planetColor} />
+        <sphereGeometry args={[planet.radius * 2, 64, 64]} />
+        {isVoidstar ? (
+          <meshStandardMaterial 
+            color={voidstarPlanetData?.baseColor}
+            emissive={voidstarPlanetData?.emissiveColor}
+            emissiveIntensity={0.4}
+            roughness={0.95}
+            metalness={0.05}
+            envMapIntensity={0.8}
+          />
+        ) : (
+          <meshStandardMaterial 
+            color={planetColor} 
+            roughness={0.9}
+            metalness={0.0}
+          />
+        )}
       </mesh>
+
+      {/* Voidstar planets get multi-layered realistic appearance */}
+      {isVoidstar && voidstarPlanetData && (
+        <>
+          {/* Surface detail layer */}
+          <mesh ref={surfaceRef}>
+            <sphereGeometry args={[planet.radius * 2.02, 64, 64]} />
+            <meshStandardMaterial 
+              color={voidstarPlanetData.surfaceColor}
+              transparent
+              opacity={0.9}
+              emissive={voidstarPlanetData.surfaceColor}
+              emissiveIntensity={0.2}
+              roughness={0.7}
+              metalness={0.4}
+              envMapIntensity={1.2}
+            />
+          </mesh>
+          
+          {/* Cloud layer */}
+          <mesh ref={cloudsRef}>
+            <sphereGeometry args={[planet.radius * 2.08, 48, 48]} />
+            <meshStandardMaterial 
+              color={voidstarPlanetData.cloudColor}
+              transparent
+              opacity={0.75}
+              emissive={voidstarPlanetData.cloudColor}
+              emissiveIntensity={0.1}
+              roughness={1.0}
+              metalness={0.0}
+              envMapIntensity={0.5}
+            />
+          </mesh>
+          
+          {/* Atmosphere layer */}
+          <mesh ref={atmosphereRef}>
+            <sphereGeometry args={[planet.radius * 2.15, 32, 32]} />
+            <meshStandardMaterial 
+              color={voidstarPlanetData.atmosphereColor}
+              transparent
+              opacity={0.6}
+              emissive={voidstarPlanetData.atmosphereColor}
+              emissiveIntensity={0.3}
+              side={2}
+              roughness={0.0}
+              metalness={0.0}
+              envMapIntensity={0.3}
+            />
+          </mesh>
+        </>
+      )}
 
       {hovered && (
         <Html
@@ -193,15 +383,17 @@ function CentralStar({ star }: { star: StarData }) {
 
     if (glowRef.current) {
       const glowPulse = Math.sin(state.clock.elapsedTime * 2) * 0.3 + 0.8
-      if (glowRef.current.material) {
-        glowRef.current.material.opacity = 0.4 * glowPulse * starVisuals.activity
+      const material = glowRef.current.material as THREE.MeshBasicMaterial
+      if (material && "opacity" in material) {
+        material.opacity = 0.4 * glowPulse * starVisuals.activity
       }
     }
 
     if (coronaRef.current) {
       const coronaPulse = Math.sin(state.clock.elapsedTime * 1.8) * 0.2 + 0.7
-      if (coronaRef.current.material) {
-        coronaRef.current.material.opacity = 0.2 * coronaPulse * starVisuals.activity
+      const coronaMaterial = coronaRef.current.material as THREE.MeshBasicMaterial
+      if (coronaMaterial && "opacity" in coronaMaterial) {
+        coronaMaterial.opacity = 0.2 * coronaPulse * starVisuals.activity
       }
       coronaRef.current.rotation.z += 0.003 * starVisuals.activity
     }
@@ -209,7 +401,8 @@ function CentralStar({ star }: { star: StarData }) {
     if (flareRef.current) {
       const flareActivity = Math.sin(state.clock.elapsedTime * 3 * starVisuals.activity) * 0.4 + 0.6
       if (flareRef.current.material) {
-        flareRef.current.material.opacity = 0.15 * flareActivity
+        const flareMaterial = flareRef.current.material as THREE.MeshBasicMaterial
+        flareMaterial.opacity = 0.15 * flareActivity
       }
       flareRef.current.rotation.x += 0.001
       flareRef.current.rotation.y += 0.002
@@ -239,7 +432,13 @@ function CentralStar({ star }: { star: StarData }) {
         onClick={handleStarClick}
       >
         <sphereGeometry args={[1, 64, 64]} />
-        <meshBasicMaterial color={starVisuals.core} />
+        <meshStandardMaterial 
+          color={starVisuals.core} 
+          emissive={starVisuals.core}
+          emissiveIntensity={0.8}
+          roughness={0.2}
+          metalness={0.0}
+        />
       </mesh>
 
       {/* Enhanced stellar atmosphere */}

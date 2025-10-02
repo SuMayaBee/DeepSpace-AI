@@ -1071,38 +1071,7 @@ export function SpaceUI() {
         </div>
       </div>
 
-      {/* Right side hover info */}
-      {hoveredStar && (
-        <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-10">
-          <div className="bg-black/80 text-white p-4 rounded-lg border border-white/20 backdrop-blur-sm pointer-events-none select-none max-w-xs">
-            <div className="font-bold text-lg mb-1">{hoveredStar.name}</div>
-            <div className="text-white/70 text-sm mb-2">{hoveredStar.distance} light years away</div>
-            
-            {/* Planet information */}
-            <div className="border-t border-white/20 pt-2">
-              <div className="text-white/80 text-sm font-medium mb-1">
-                🪐 Planets ({hoveredStar.planets?.length || 0})
-              </div>
-              {hoveredStar.planets && hoveredStar.planets.length > 0 ? (
-                <div className="space-y-1">
-                  {hoveredStar.planets.slice(0, 3).map((planet, index) => (
-                    <div key={index} className="text-white/60 text-xs">
-                      • {planet}
-                    </div>
-                  ))}
-                  {hoveredStar.planets.length > 3 && (
-                    <div className="text-white/50 text-xs italic">
-                      +{hoveredStar.planets.length - 3} more planets
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-white/50 text-xs italic">No known planets</div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+
 
     </>
   )
