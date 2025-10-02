@@ -263,7 +263,7 @@ export function SpaceUI() {
       {/* AI Analysis Side Panel */}
       {aiModalOpen && (
         <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-30 w-96">
-          <Card className="bg-gradient-to-br from-black/90 via-gray-900/90 to-black/90 border border-cyan-400/30 text-white backdrop-blur-xl shadow-2xl shadow-cyan-500/10">
+          <Card className="bg-gradient-to-br from-cyan-900/40 via-cyan-800/30 to-cyan-900/40 border border-cyan-400/40 text-white backdrop-blur-xl shadow-2xl shadow-cyan-500/20">
             <CardContent className="p-4">
               <div className="flex flex-col gap-4">
                 {/* Enhanced Header */}
@@ -358,7 +358,7 @@ export function SpaceUI() {
       {/* AI Method Findings Display - Center Screen */}
       {hoveredMethod && (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40">
-          <Card className="bg-gradient-to-br from-black/95 via-gray-900/95 to-black/95 border border-white/30 text-white backdrop-blur-xl shadow-2xl max-w-lg">
+          <Card className="bg-gradient-to-br from-cyan-900/50 via-cyan-800/40 to-cyan-900/50 border border-cyan-400/40 text-white backdrop-blur-xl shadow-2xl max-w-lg">
             <CardContent className="p-6">
               {(() => {
                 const methodData = detectionData.find(m => m.method === hoveredMethod)
@@ -933,7 +933,7 @@ export function SpaceUI() {
 
       {/* Upper middle - Milky Way Galaxy info */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-10">
-        <Card className="bg-black/20 border-white/30 text-white backdrop-blur-sm">
+        <Card className="bg-cyan-900/20 border-cyan-400/30 text-white backdrop-blur-sm">
           <CardContent className="p-2">
             <div className="flex items-center gap-6">
               {/* Header */}
