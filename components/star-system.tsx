@@ -133,7 +133,7 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
   const surfaceRef = useRef<THREE.Mesh>(null!)
   const [hovered, setHovered] = useState(false)
   const [angle, setAngle] = useState(Math.random() * Math.PI * 2)
-  const { focusOnObject, zoomedStar } = useStarStore()
+  const { focusOnObject, zoomedStar, setChartPosition, setPlanetInCenter } = useStarStore()
 
   const isVoidstar = zoomedStar?.name === "Voidstar"
   
@@ -262,6 +262,25 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
         surfaceRef.current.position.x = x
         surfaceRef.current.position.z = z
         surfaceRef.current.position.y = 0
+      }
+
+      // Check if planet is in center of view (front of camera, facing positive Z)
+      const isPlanetInCenter = z > orbitRadius * 0.8 // Planet is in front when Z is positive and large
+      
+      if (isPlanetInCenter) {
+        setPlanetInCenter(true)
+        setChartPosition("lower") // Move chart down when planet is in center
+      } else {
+        // Check if any planet is still in center by checking if this planet just left center
+        const wasInCenter = Math.cos(angle - planet.orbitSpeed * 0.01) * orbitRadius > orbitRadius * 0.8
+        if (wasInCenter && !isPlanetInCenter) {
+          // This planet just left center, check if other planets might be in center
+          // For simplicity, we'll reset after a short delay
+          setTimeout(() => {
+            setPlanetInCenter(false)
+            setChartPosition("middle") // Reset chart to middle position
+          }, 1000)
+        }
       }
 
       // Realistic planet rotation with different speeds for layers

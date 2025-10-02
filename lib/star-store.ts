@@ -33,21 +33,24 @@ interface StarData {
 type FocusTarget = {
   type: "star" | "planet"
   data: StarData | PlanetData
-  parentStar?: StarData // For planets, reference to their parent star
 }
 
 interface StarStore {
   selectedStar: StarData | null
   hoveredStar: StarData | null
-  currentView: "space" | "star-system" | "focused-object" | "exoplanet-detection"
-  zoomedStar: StarData | null
   focusedObject: FocusTarget | null
-  isFilterSpinning: boolean
+  currentView: "space" | "star-system" | "exoplanet-detection" | "focused-object"
+  zoomedStar: StarData | null
   navigationSource: "space" | "exoplanet-detection" | null
-  setSelectedStar: (star: StarData | null) => void
+  chartPosition: "middle" | "lower" // Track chart position
+  planetInCenter: boolean // Track if any planet is in center of view
+  isFilterSpinning: boolean
   setHoveredStar: (star: StarData | null) => void
+  setNavigationSource: (source: "space" | "exoplanet-detection" | null) => void
   zoomToStarSystem: (star: StarData) => void
-  zoomToStarSystemFromVoidstar: (star: StarData) => void
+  zoomToStarSystemFromVoidstar: (starData: StarData) => void
+  setChartPosition: (position: "middle" | "lower") => void
+  setPlanetInCenter: (inCenter: boolean) => void
   focusOnObject: (target: FocusTarget) => void
   returnToStarSystem: () => void
   returnToSpace: () => void
@@ -58,29 +61,36 @@ interface StarStore {
 export const useStarStore = create<StarStore>((set, get) => ({
   selectedStar: null,
   hoveredStar: null,
+  focusedObject: null,
   currentView: "space",
   zoomedStar: null,
-  focusedObject: null,
-  isFilterSpinning: false,
   navigationSource: null,
-  setSelectedStar: (star) => set({ selectedStar: star }),
+  chartPosition: "middle",
+  planetInCenter: false,
+  isFilterSpinning: false,
+  
   setHoveredStar: (star) => set({ hoveredStar: star }),
-  zoomToStarSystem: (star) =>
-    set({
+  setNavigationSource: (source) => set({ navigationSource: source }),
+  zoomToStarSystem: (star) => {
+    set({ 
+      currentView: "star-system", 
       zoomedStar: star,
-      currentView: "star-system",
-      selectedStar: null,
-      focusedObject: null,
       navigationSource: "space",
-    }),
-  zoomToStarSystemFromVoidstar: (star) =>
-    set({
-      zoomedStar: star,
-      currentView: "star-system",
-      selectedStar: null,
-      focusedObject: null,
+      chartPosition: "middle",
+      planetInCenter: false
+    })
+  },
+  zoomToStarSystemFromVoidstar: (starData) => {
+    set({ 
+      currentView: "star-system", 
+      zoomedStar: starData,
       navigationSource: "exoplanet-detection",
-    }),
+      chartPosition: "middle",
+      planetInCenter: false
+    })
+  },
+  setChartPosition: (position) => set({ chartPosition: position }),
+  setPlanetInCenter: (inCenter) => set({ planetInCenter: inCenter }),
   focusOnObject: (target) =>
     set({
       focusedObject: target,
@@ -97,9 +107,10 @@ export const useStarStore = create<StarStore>((set, get) => ({
     set({
       currentView: "space",
       zoomedStar: null,
-      selectedStar: null,
-      focusedObject: null,
       navigationSource: null,
+      chartPosition: "middle",
+      planetInCenter: false,
+      focusedObject: null,
     }),
   goToExoplanetDetection: () =>
     set({

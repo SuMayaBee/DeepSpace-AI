@@ -1,9 +1,10 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useEffect, useState } from "react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Activity, Zap } from "lucide-react"
+import { useStarStore } from "@/lib/star-store"
 
 interface TransitChartProps {
   planetName: string
@@ -11,13 +12,28 @@ interface TransitChartProps {
 }
 
 export function TransitChart({ planetName, starName }: TransitChartProps) {
-  // Generate realistic transit data
+  const { planetInCenter } = useStarStore()
+  const [dynamicTransitDepth, setDynamicTransitDepth] = useState(0.02)
+  const [chartOffset, setChartOffset] = useState(0)
+
+  // Update chart properties based on planet position
+  useEffect(() => {
+    if (planetInCenter) {
+      // When planet is in center, increase transit depth and add offset
+      setDynamicTransitDepth(0.05) // Deeper transit
+      setChartOffset(0.01) // Shift line down
+    } else {
+      // Reset when planet is not in center
+      setDynamicTransitDepth(0.02)
+      setChartOffset(0)
+    }
+  }, [planetInCenter])
+  // Generate realistic transit data with dynamic properties
   const transitData = useMemo(() => {
     const data = []
     const totalPoints = 100
     const transitDuration = 20 // points where transit occurs
     const transitStart = 40 // when transit starts
-    const transitDepth = 0.02 // 2% light reduction during transit
     
     // Base stellar brightness (normalized to 1.0)
     const baseBrightness = 1.0
@@ -28,32 +44,32 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
       // Add some stellar noise
       const noise = (Math.random() - 0.5) * 0.005
       
-      // Transit detection - light curve dip
+      // Transit detection - light curve dip with dynamic depth
       if (i >= transitStart && i < transitStart + transitDuration) {
         const transitProgress = (i - transitStart) / transitDuration
         
         // Create realistic transit shape (ingress, flat bottom, egress)
         if (transitProgress < 0.1) {
           // Ingress - gradual decrease
-          brightness -= transitDepth * (transitProgress / 0.1)
+          brightness -= dynamicTransitDepth * (transitProgress / 0.1)
         } else if (transitProgress < 0.9) {
           // Flat bottom - full transit
-          brightness -= transitDepth
+          brightness -= dynamicTransitDepth
         } else {
           // Egress - gradual increase
-          brightness -= transitDepth * (1 - (transitProgress - 0.9) / 0.1)
+          brightness -= dynamicTransitDepth * (1 - (transitProgress - 0.9) / 0.1)
         }
       }
       
       data.push({
         time: i,
-        brightness: brightness + noise,
+        brightness: brightness + noise - chartOffset, // Apply dynamic offset
         phase: i >= transitStart && i < transitStart + transitDuration ? "transit" : "normal"
       })
     }
     
     return data
-  }, [planetName, starName])
+  }, [planetName, starName, dynamicTransitDepth, chartOffset])
 
   return (
     <Card className="bg-black/50 border-white/20 backdrop-blur-sm transition-all duration-500 hover:bg-black/60 w-96">
@@ -88,7 +104,7 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
                 fontSize={10}
                 tickLine={false}
                 axisLine={false}
-                domain={[0.97, 1.01]}
+                domain={[0.94, 1.01]}
                 label={{ value: 'Light', angle: -90, position: 'insideLeft', offset: 10, fill: '#9CA3AF', fontSize: 10 }}
               />
               <Tooltip
@@ -106,11 +122,11 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
                 type="monotone"
                 dataKey="brightness"
                 stroke="#00FFFF"
-                strokeWidth={2}
+                strokeWidth={planetInCenter ? 3 : 2} // Thicker line when planet is in center
                 dot={false}
-                activeDot={{ r: 4, fill: '#00FFFF', stroke: '#000000', strokeWidth: 1 }}
+                activeDot={{ r: planetInCenter ? 6 : 4, fill: '#00FFFF', stroke: '#000000', strokeWidth: 1 }}
                 isAnimationActive={true}
-                animationDuration={2000}
+                animationDuration={planetInCenter ? 1000 : 2000} // Faster animation when planet is in center
                 animationEasing="ease-out"
               />
             </LineChart>
@@ -121,7 +137,7 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className="text-white/70">Transit Depth:</span>
-            <span className="text-cyan-400 font-semibold">2.0%</span>
+            <span className="text-cyan-400 font-semibold">{(dynamicTransitDepth * 100).toFixed(1)}%</span>
           </div>
           <div className="flex items-center justify-between text-xs">
             <span className="text-white/70">Duration:</span>
@@ -141,10 +157,10 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
         </div>
         
         {/* AI Detection Indicator */}
-        <div className="flex items-center justify-center gap-3 text-sm text-cyan-400 bg-cyan-500/10 rounded-lg px-4 py-2 border border-cyan-500/20">
-          <Zap className="w-4 h-4 animate-pulse" />
+        <div className="flex items-center justify-center gap-3 text-sm rounded-lg px-4 py-2 border text-cyan-400 bg-cyan-500/10 border-cyan-500/20 transition-all duration-500">
+          <Zap className="w-4 h-4" />
           <span className="font-medium">AI Transit Detection Active</span>
-          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
+          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
         </div>
       </CardContent>
     </Card>
