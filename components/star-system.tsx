@@ -517,6 +517,7 @@ function OrbitRings({ planets, starColor }: { planets: PlanetData[]; starColor: 
 
 function CentralStar({ star }: { star: StarData }) {
   const meshRef = useRef<THREE.Mesh>(null!)
+  const fireParticlesRef = useRef<THREE.Group>(null!)
   const { focusOnObject } = useStarStore()
   const [hovered, setHovered] = useState(false)
 
@@ -577,16 +578,66 @@ function CentralStar({ star }: { star: StarData }) {
 
   useFrame((state) => {
     if (meshRef.current) {
-      // Realistic stellar pulsation based on star type and mass
-      const pulsationSpeed = starVisuals.activity * 1.5
-      const pulsationAmount = star.type?.includes("Giant") ? 0.15 : 0.08
-      const pulse = Math.sin(state.clock.elapsedTime * pulsationSpeed) * pulsationAmount + 1
-      meshRef.current.scale.setScalar(starSize * pulse)
-
       // Surface convection rotation
-      meshRef.current.rotation.y += 0.002 * starVisuals.activity
+      meshRef.current.rotation.y += 0.002 * starVisuals.activity * (star.type?.includes("Giant") ? 0.5 : 1)
+
+      // Add constant intense glow for Sun (no pulsing)
+      if (isSun) {
+        const material = meshRef.current.material as THREE.MeshStandardMaterial
+        if (material) {
+          // Keep constant maximum glow intensity
+          material.emissiveIntensity = 2.0
+        }
+      }
     }
 
+    // Animate fire particles for Sun
+    if (isSun && fireParticlesRef.current) {
+      const time = state.clock.elapsedTime
+      const children = fireParticlesRef.current.children
+
+      // Animate outer fire layer (first 24 particles)
+      for (let i = 0; i < Math.min(24, children.length); i++) {
+        const mesh = children[i] as THREE.Mesh
+        const offset = i * 0.3
+
+        // Create aggressive flickering flame motion
+        const flickerX = Math.sin(time * 3.5 + offset) * 0.25
+        const flickerY = Math.sin(time * 3 + offset) * 0.18
+        const flickerZ = Math.cos(time * 2.8 + offset) * 0.25
+
+        mesh.position.set(flickerX, flickerY, flickerZ)
+
+        // Aggressive scale animation for flame size variation
+        const scale = 0.85 + Math.sin(time * 5 + offset) * 0.25
+        mesh.scale.setScalar(scale)
+
+        // Faster rotation for angry flames
+        mesh.rotation.y = time * 0.5 + offset * 0.7
+        mesh.rotation.x = Math.sin(time * 2.5 + offset) * 0.4
+      }
+
+      // Animate inner fire layer (remaining particles)
+      for (let i = 24; i < children.length; i++) {
+        const mesh = children[i] as THREE.Mesh
+        const offset = (i - 24) * 0.4
+
+        // Create very intense inner flame motion
+        const flickerX = Math.sin(time * 6 + offset) * 0.15
+        const flickerY = Math.sin(time * 5.5 + offset) * 0.12
+        const flickerZ = Math.cos(time * 4.8 + offset) * 0.15
+
+        mesh.position.set(flickerX, flickerY, flickerZ)
+
+        // Very aggressive scale variation for inner flames
+        const scale = 0.9 + Math.sin(time * 7 + offset) * 0.2
+        mesh.scale.setScalar(scale)
+
+        // Very fast rotation for inner flames
+        mesh.rotation.y = time * 0.9 + offset * 0.9
+        mesh.rotation.x = Math.sin(time * 3.5 + offset) * 0.5
+      }
+    }
   })
 
   const handleStarClick = () => {
@@ -612,17 +663,87 @@ function CentralStar({ star }: { star: StarData }) {
         onClick={handleStarClick}
       >
         <sphereGeometry args={[1, 64, 64]} />
-        <meshStandardMaterial 
-          color={starVisuals.core} 
-          emissive={starVisuals.core}
-          emissiveIntensity={0.8}
-          roughness={0.2}
-          metalness={0.0}
-        />
+        {isSun ? (
+          // Sun gets fireball design
+          <meshStandardMaterial
+            color="#FF0000"
+            emissive="#CC0000"
+            emissiveIntensity={2.0}
+            roughness={0.02}
+            metalness={0.0}
+          />
+        ) : (
+          // Other stars get normal design
+          <meshStandardMaterial
+            color={starVisuals.core}
+            emissive={starVisuals.core}
+            emissiveIntensity={0.8}
+            roughness={0.2}
+            metalness={0.0}
+          />
+        )}
       </mesh>
 
       {/* Enhanced lighting for realistic illumination */}
-      <pointLight position={[0, 0, 0]} intensity={starVisuals.activity * 2} color={starVisuals.core} distance={50} />
+      <pointLight
+        position={[0, 0, 0]}
+        intensity={isSun ? starVisuals.activity * 6 : starVisuals.activity * 2}
+        color={isSun ? "#FF0000" : starVisuals.core}
+        distance={60}
+      />
+
+      {/* Fire particles for Sun */}
+      {isSun && (
+        <group ref={fireParticlesRef}>
+          {/* Create a spherical shell of fire around the Sun */}
+          {Array.from({ length: 24 }, (_, i) => {
+            const phi = Math.acos(2 * Math.random() - 1) // Random spherical coordinate
+            const theta = Math.random() * Math.PI * 2
+            const radius = 1.8 + Math.random() * 0.4 // Fire shell radius
+
+            const x = radius * Math.sin(phi) * Math.cos(theta)
+            const y = radius * Math.sin(phi) * Math.sin(theta)
+            const z = radius * Math.cos(phi)
+
+            return (
+              <mesh key={i} position={[x, y, z]}>
+                <sphereGeometry args={[0.08 + Math.random() * 0.06, 6, 6]} />
+                <meshStandardMaterial
+                  color={`#${Math.random() > 0.5 ? 'FF' : 'EE'}${'0'}${'0'}00`}
+                  emissive={`#${Math.random() > 0.5 ? 'CC' : 'AA'}${'0'}${'0'}00`}
+                  emissiveIntensity={1.2}
+                  transparent
+                  opacity={0.8 + Math.random() * 0.2}
+                />
+              </mesh>
+            )
+          })}
+
+          {/* Additional inner fire layer for density */}
+          {Array.from({ length: 16 }, (_, i) => {
+            const phi = Math.acos(2 * Math.random() - 1)
+            const theta = Math.random() * Math.PI * 2
+            const radius = 1.4 + Math.random() * 0.3
+
+            const x = radius * Math.sin(phi) * Math.cos(theta)
+            const y = radius * Math.sin(phi) * Math.sin(theta)
+            const z = radius * Math.cos(phi)
+
+            return (
+              <mesh key={`inner-${i}`} position={[x, y, z]}>
+                <sphereGeometry args={[0.06 + Math.random() * 0.04, 5, 5]} />
+                <meshStandardMaterial
+                  color="#EE0000"
+                  emissive="#AA0000"
+                  emissiveIntensity={1.5}
+                  transparent
+                  opacity={0.9 + Math.random() * 0.1}
+                />
+              </mesh>
+            )
+          })}
+        </group>
+      )}
 
       {hovered && (
         <Html position={[0, 5, 0]} center distanceFactor={15}>
