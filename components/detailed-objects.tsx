@@ -7,6 +7,7 @@ import { useStarStore, type StarData, type PlanetData } from "@/lib/star-store"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Home } from "lucide-react"
 import { RingGeometry } from "three"
+import { generatePlanetColorScheme } from "./star-system"
 
 function DetailedPlanet({ planet, parentStar }: { planet: PlanetData; parentStar?: StarData }) {
   const meshRef = useRef<THREE.Mesh>(null!)
@@ -17,72 +18,23 @@ function DetailedPlanet({ planet, parentStar }: { planet: PlanetData; parentStar
   const oceanRef = useRef<THREE.Mesh>(null!)
   const landRef = useRef<THREE.Mesh>(null!)
 
-  // Planet color palette by real planet name (only colors vary)
-  type Palette = { band1: string; band2: string; band3: string; atmosphere: string; ocean: string; land: string; clouds: string }
-  const palette = useMemo<Palette>(() => {
-    // Seeded RNG based on planet identity for stable randomness per planet
-    const key = (planet.id || planet.name || "seed").toString()
+  // Use the same color generation logic as the main star system view
+  const planetColorScheme = useMemo(() => {
+    return generatePlanetColorScheme(planet.id)
+  }, [planet.id])
 
-    // Simple string hash to 32-bit int
-    const hash = (str: string) => {
-      let h = 2166136261 >>> 0
-      for (let i = 0; i < str.length; i++) {
-        h ^= str.charCodeAt(i)
-        h = Math.imul(h, 16777619)
-      }
-      return h >>> 0
+  // Map the color scheme to the palette format used by the detailed view
+  const palette = useMemo(() => {
+    return {
+      band1: planetColorScheme.baseColor,
+      band2: planetColorScheme.surfaceColor,
+      band3: planetColorScheme.cloudColor,
+      atmosphere: planetColorScheme.atmosphereColor,
+      ocean: planetColorScheme.surfaceColor,
+      land: planetColorScheme.surfaceColor,
+      clouds: planetColorScheme.cloudColor
     }
-
-    // Mulberry32 PRNG
-    const mulberry32 = (a: number) => {
-      return () => {
-        let t = (a += 0x6D2B79F5)
-        t = Math.imul(t ^ (t >>> 15), t | 1)
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-      }
-    }
-
-    const rnd = mulberry32(hash(key))
-
-    // Helper: HSL to HEX
-    const hslToHex = (h: number, s: number, l: number) => {
-      const a = s * Math.min(l, 1 - l)
-      const f = (n: number) => {
-        const k = (n + h / 30) % 12
-        const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)
-        return Math.round(255 * color)
-          .toString(16)
-          .padStart(2, "0")
-      }
-      return `#${f(0)}${f(8)}${f(4)}`
-    }
-
-    // Base hue and variations
-    const baseHue = Math.floor(rnd() * 360)
-    const hue1 = (baseHue + Math.floor(rnd() * 20) - 10 + 360) % 360
-    const hue2 = (baseHue + Math.floor(rnd() * 20) - 10 + 360) % 360
-    const hue3 = (baseHue + Math.floor(rnd() * 30) - 15 + 360) % 360
-
-    const s1 = 0.65 + rnd() * 0.2
-    const s2 = 0.65 + rnd() * 0.2
-    const s3 = 0.6 + rnd() * 0.25
-
-    const l1 = 0.5 + rnd() * 0.15
-    const l2 = 0.55 + rnd() * 0.15
-    const l3 = 0.6 + rnd() * 0.15
-
-    const band1 = hslToHex(hue1, s1, l1)
-    const band2 = hslToHex(hue2, s2, l2)
-    const band3 = hslToHex(hue3, s3, l3)
-
-    const atmosphere = hslToHex((baseHue + 15) % 360, Math.min(0.85, s2 + 0.1), Math.min(0.8, l2 + 0.15))
-    const ocean = hslToHex((baseHue + 300) % 360, Math.min(0.8, s1 + 0.05), Math.max(0.35, l1 - 0.15))
-    const land = hslToHex((baseHue + 10) % 360, s2, Math.max(0.45, l2 - 0.05))
-    const clouds = "#FFFFFF"
-
-    return { band1, band2, band3, atmosphere, ocean, land, clouds }
-  }, [planet.id, planet.name])
+  }, [planetColorScheme])
 
   // Enhanced realistic planet features (structure unchanged; colors from palette)
   const planetFeatures = useMemo(() => {
@@ -571,7 +523,7 @@ export function FocusedObjectUI() {
         </Button>
       </div>
 
-      <div className="fixed top-20 left-4 z-50 bg-black/95 text-white p-6 rounded-lg border border-white/30 backdrop-blur-sm max-w-sm">
+      <div className="fixed top-20 right-4 z-50 bg-black/95 text-white p-6 rounded-lg border border-white/30 backdrop-blur-sm max-w-sm">
         <h2 className="text-2xl font-bold mb-3 text-white">{objectName}</h2>
         <div className="text-sm text-white/80 space-y-2">
           <div>Type: {objectInfo.type}</div>

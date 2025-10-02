@@ -6,18 +6,100 @@ import { useStarStore, type StarData, type PlanetData } from "@/lib/star-store"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 
-const planetColors = [
-  "#FF6B35", // Orange (like in reference)
-  "#FF8C42", // Orange-red
-  "#D2691E", // Chocolate/brown-orange
-  "#FF7F50", // Coral
-  "#CD853F", // Peru/tan
-  "#B22222", // Fire brick red
-  "#FF4500", // Orange red
-  "#DC143C", // Crimson
-  "#8B4513", // Saddle brown
-  "#A0522D", // Sienna
-]
+// Helper function to generate random hex color
+function getRandomColor(): string {
+  const letters = '0123456789ABCDEF'
+  let color = '#'
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)]
+  }
+  return color
+}
+
+// Helper function to generate random color in specific hue range
+function getRandomColorInHueRange(minHue: number, maxHue: number): string {
+  const hue = Math.floor(Math.random() * (maxHue - minHue + 1)) + minHue
+  const saturation = Math.floor(Math.random() * 30) + 70 // 70-100%
+  const lightness = Math.floor(Math.random() * 30) + 40 // 40-70%
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`
+}
+
+// Convert HSL to Hex
+function hslToHex(hsl: string): string {
+  const match = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/)
+  if (!match) return getRandomColor()
+  
+  const h = parseInt(match[1]) / 360
+  const s = parseInt(match[2]) / 100
+  const l = parseInt(match[3]) / 100
+  
+  const hue2rgb = (p: number, q: number, t: number) => {
+    if (t < 0) t += 1
+    if (t > 1) t -= 1
+    if (t < 1/6) return p + (q - p) * 6 * t
+    if (t < 1/2) return q
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6
+    return p
+  }
+  
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+  const p = 2 * l - q
+  
+  const r = Math.round(hue2rgb(p, q, h + 1/3) * 255)
+  const g = Math.round(hue2rgb(p, q, h) * 255)
+  const b = Math.round(hue2rgb(p, q, h - 1/3) * 255)
+  
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
+}
+
+// Generate a complete planet color scheme
+function generatePlanetColorScheme(planetId: string): {
+  baseColor: string
+  surfaceColor: string
+  atmosphereColor: string
+  emissiveColor: string
+  cloudColor: string
+  name: string
+} {
+  // Use planet ID as seed for consistent colors
+  const seed = planetId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  const random = (min: number, max: number) => {
+    const x = Math.sin(seed) * 10000
+    const pseudoRandom = x - Math.floor(x)
+    return Math.floor(pseudoRandom * (max - min + 1)) + min
+  }
+  
+  // Define color palettes with different themes
+  const themes = [
+    { name: "Ocean World", hueRange: [180, 240] }, // Blues
+    { name: "Volcanic Planet", hueRange: [0, 30] }, // Reds/Oranges
+    { name: "Forest World", hueRange: [80, 140] }, // Greens
+    { name: "Desert Planet", hueRange: [30, 60] }, // Yellows/Oranges
+    { name: "Ice Giant", hueRange: [200, 260] }, // Light blues/Cyans
+    { name: "Gas Giant", hueRange: [240, 300] }, // Purples
+    { name: "Magma World", hueRange: [0, 20] }, // Deep reds
+    { name: "Crystal Planet", hueRange: [280, 340] }, // Pinks/Magentas
+  ]
+  
+  const theme = themes[random(0, themes.length - 1)]
+  const baseHue = random(theme.hueRange[0], theme.hueRange[1])
+  
+  // Generate harmonious colors based on base hue
+  const baseColor = hslToHex(`hsl(${baseHue}, ${random(60, 80)}%, ${random(25, 40)}%)`)
+  const surfaceColor = hslToHex(`hsl(${baseHue}, ${random(70, 90)}%, ${random(45, 65)}%)`)
+  const atmosphereColor = hslToHex(`hsl(${baseHue}, ${random(50, 70)}%, ${random(60, 80)}%)`)
+  const emissiveColor = hslToHex(`hsl(${baseHue}, ${random(80, 100)}%, ${random(10, 25)}%)`)
+  const cloudColor = hslToHex(`hsl(${baseHue}, ${random(20, 40)}%, ${random(85, 95)}%)`)
+  
+  return {
+    baseColor,
+    surfaceColor,
+    atmosphereColor,
+    emissiveColor,
+    cloudColor,
+    name: theme.name
+  }
+}
 
 const starColors = [
   "#FFFFFF", // White (hot star like Sirius)
@@ -38,6 +120,11 @@ function adjustColorBrightness(color: string, amount: number): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
 }
 
+// Uniform orbit spacing for all planets/rings
+const ORBIT_BASE = 3 // inner offset from the star
+const ORBIT_SPACING = 2.5 // constant spacing between consecutive orbits
+const ORBIT_FIRST_EXTRA = 1.0 // additional spacing for the very first orbit to avoid sun glow
+
 function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; starColor: string; index: number }) {
   const planetRef = useRef<THREE.Mesh>(null!)
   const atmosphereRef = useRef<THREE.Mesh>(null!)
@@ -48,55 +135,108 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
   const { focusOnObject, zoomedStar } = useStarStore()
 
   const isVoidstar = zoomedStar?.name === "Voidstar"
-  const planetColor = planetColors[index % planetColors.length]
+  
+  // Generate dynamic colors for each planet
+  const planetColorScheme = useMemo(() => {
+    if (isVoidstar) {
+      // For Voidstar, use the predefined planet types
+      const planetTypes = [
+        { 
+          baseColor: "#0C4A6E", // Deep ocean blue
+          surfaceColor: "#0EA5E9", // Bright cyan-blue
+          atmosphereColor: "#38BDF8", 
+          emissiveColor: "#082F49",
+          cloudColor: "#E0F2FE",
+          name: "Quantum Crystal World"
+        },
+        { 
+          baseColor: "#991B1B", // Deep red base  
+          surfaceColor: "#F97316", // Bright orange
+          atmosphereColor: "#FB923C", 
+          emissiveColor: "#450A0A",
+          cloudColor: "#FED7AA",
+          name: "Exotic Gas Giant"
+        },
+        { 
+          baseColor: "#14532D", // Deep forest green
+          surfaceColor: "#22C55E", // Bright green
+          atmosphereColor: "#4ADE80", 
+          emissiveColor: "#052E16",
+          cloudColor: "#DCFCE7",
+          name: "Helium-3 Rich World"
+        },
+        { 
+          baseColor: "#92400E", // Deep amber
+          surfaceColor: "#F59E0B", // Bright amber
+          atmosphereColor: "#FbbF24", 
+          emissiveColor: "#451A03",
+          cloudColor: "#FEF3C7",
+          name: "Quantum Field Planet"
+        },
+        { 
+          baseColor: "#FFFFFF", // Pure white
+          surfaceColor: "#F0F9FF", // Very light blue-white
+          atmosphereColor: "#E0F2FE", 
+          emissiveColor: "#F8FAFC",
+          cloudColor: "#FFFFFF",
+          name: "Frozen Ice Giant"
+        },
+        { 
+          baseColor: "#581C87", // Deep purple
+          surfaceColor: "#A855F7", // Bright purple
+          atmosphereColor: "#C084FC", 
+          emissiveColor: "#3B0764",
+          cloudColor: "#F3E8FF",
+          name: "Ammonia Cloud World"
+        },
+        { 
+          baseColor: "#155E75", // Dark cyan
+          surfaceColor: "#06B6D4", // Bright cyan
+          atmosphereColor: "#22D3EE", 
+          emissiveColor: "#083344",
+          cloudColor: "#E0F7FA",
+          name: "Methane Ice Planet"
+        },
+        { 
+          baseColor: "#831843", // Deep pink
+          surfaceColor: "#EC4899", // Bright pink
+          atmosphereColor: "#F472B6", 
+          emissiveColor: "#500724",
+          cloudColor: "#FCE7F3",
+          name: "Rose Quartz World"
+        },
+        { 
+          baseColor: "#134E4A", // Dark teal
+          surfaceColor: "#14B8A6", // Bright teal
+          atmosphereColor: "#2DD4BF", 
+          emissiveColor: "#064E3B",
+          cloudColor: "#CCFBF1",
+          name: "Jade Ocean Planet"
+        },
+        { 
+          baseColor: "#713F12", // Dark yellow
+          surfaceColor: "#EAB308", // Bright yellow
+          atmosphereColor: "#FACC15", 
+          emissiveColor: "#422006",
+          cloudColor: "#FEF9C3",
+          name: "Sulfur Desert World"
+        }
+      ]
+      return planetTypes[index % planetTypes.length]
+    } else {
+      // For regular stars, generate random colors based on planet ID
+      return generatePlanetColorScheme(planet.id)
+    }
+  }, [isVoidstar, planet.id, index])
 
-  // Special Voidstar planet materials and colors
-  const voidstarPlanetData = useMemo(() => {
-    if (!isVoidstar) return null
-    
-    const planetTypes = [
-      { 
-        baseColor: "#0C4A6E", // Deep ocean blue
-        surfaceColor: "#0EA5E9", // Bright cyan-blue
-        atmosphereColor: "#38BDF8", 
-        emissiveColor: "#082F49",
-        cloudColor: "#E0F2FE",
-        name: "Quantum Crystal World"
-      },
-      { 
-        baseColor: "#991B1B", // Deep red base  
-        surfaceColor: "#F97316", // Bright orange
-        atmosphereColor: "#FB923C", 
-        emissiveColor: "#450A0A",
-        cloudColor: "#FED7AA",
-        name: "Exotic Gas Giant"
-      },
-      { 
-        baseColor: "#14532D", // Deep forest green
-        surfaceColor: "#22C55E", // Bright green
-        atmosphereColor: "#4ADE80", 
-        emissiveColor: "#052E16",
-        cloudColor: "#DCFCE7",
-        name: "Helium-3 Rich World"
-      },
-      { 
-        baseColor: "#92400E", // Deep amber
-        surfaceColor: "#F59E0B", // Bright amber
-        atmosphereColor: "#FbbF24", 
-        emissiveColor: "#451A03",
-        cloudColor: "#FEF3C7",
-        name: "Quantum Field Planet"
-      }
-    ]
-    
-    return planetTypes[index % planetTypes.length]
-  }, [isVoidstar, index])
 
   useFrame((state) => {
     setAngle((prev) => prev + planet.orbitSpeed * 0.01)
 
     if (planetRef.current) {
-      const orbitRadius = planet.distance * 8
+      // Enforce uniform orbit spacing by index, add extra for the first orbit
+      const base = ORBIT_BASE + index * ORBIT_SPACING
+      const orbitRadius = base + (index === 0 ? ORBIT_FIRST_EXTRA : 0)
       const x = Math.cos(angle) * orbitRadius
       const z = Math.sin(angle) * orbitRadius
       
@@ -251,127 +391,122 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
         onClick={handlePlanetClick}
       >
         <sphereGeometry args={[planet.radius * 2, 128, 128]} />
-        {isVoidstar ? (
-          <meshStandardMaterial 
-            color={voidstarPlanetData?.baseColor}
-            emissive={voidstarPlanetData?.emissiveColor}
-            emissiveIntensity={0.8}
-            roughness={0.75}
-            metalness={0.25}
-            envMapIntensity={1.8}
-          />
-        ) : (
-          <meshStandardMaterial 
-            color={planetColor} 
-            roughness={0.6}
-            metalness={0.4}
-            envMapIntensity={2.0}
-          />
-        )}
+        <meshStandardMaterial 
+          color={planetColorScheme.baseColor}
+          emissive={planetColorScheme.emissiveColor}
+          emissiveIntensity={isVoidstar ? 0.8 : 0.3}
+          roughness={isVoidstar ? 0.75 : 0.6}
+          metalness={isVoidstar ? 0.25 : 0.4}
+          envMapIntensity={isVoidstar ? 1.8 : 2.0}
+        />
       </mesh>
 
       {/* Enhanced realistic planet layers for all planets */}
-      {isVoidstar && voidstarPlanetData ? (
-        <>
-          {/* Surface terrain details with continents and oceans */}
-          <mesh ref={surfaceRef}>
-            <sphereGeometry args={[planet.radius * 2.01, 128, 128]} />
-            <meshStandardMaterial 
-              color={voidstarPlanetData.surfaceColor}
-              transparent
-              opacity={0.9}
-              emissive={voidstarPlanetData.surfaceColor}
-              emissiveIntensity={0.5}
-              roughness={0.5}
-              metalness={0.7}
-              envMapIntensity={2.5}
-            />
-          </mesh>
-          
-          {/* Ocean/liquid layer for realistic water bodies */}
-          <mesh>
-            <sphereGeometry args={[planet.radius * 2.005, 96, 96]} />
-            <meshStandardMaterial 
-              color={voidstarPlanetData.surfaceColor}
-              transparent
-              opacity={0.4}
-              emissive={voidstarPlanetData.surfaceColor}
-              emissiveIntensity={0.2}
-              roughness={0.1}
-              metalness={0.8}
-              envMapIntensity={2.5}
-            />
-          </mesh>
-          
-          {/* Continental/land mass details */}
+      <>
+        {/* Surface terrain details with continents and oceans */}
+        <mesh ref={surfaceRef}>
+          <sphereGeometry args={[planet.radius * 2.01, 128, 128]} />
+          <meshStandardMaterial 
+            color={planetColorScheme.surfaceColor}
+            transparent
+            opacity={isVoidstar ? 0.9 : 0.85}
+            emissive={planetColorScheme.surfaceColor}
+            emissiveIntensity={isVoidstar ? 0.5 : 0.2}
+            roughness={isVoidstar ? 0.5 : 0.4}
+            metalness={isVoidstar ? 0.7 : 0.6}
+            envMapIntensity={isVoidstar ? 2.5 : 2.2}
+          />
+        </mesh>
+        
+        {/* Ocean/liquid layer for realistic water bodies */}
+        <mesh>
+          <sphereGeometry args={[planet.radius * 2.005, 96, 96]} />
+          <meshStandardMaterial 
+            color={planetColorScheme.surfaceColor}
+            transparent
+            opacity={isVoidstar ? 0.4 : 0.5}
+            emissive={planetColorScheme.surfaceColor}
+            emissiveIntensity={isVoidstar ? 0.2 : 0.1}
+            roughness={isVoidstar ? 0.1 : 0.15}
+            metalness={isVoidstar ? 0.8 : 0.7}
+            envMapIntensity={isVoidstar ? 2.5 : 2.0}
+          />
+        </mesh>
+        
+        {/* Continental/land mass details */}
+        {isVoidstar && (
           <mesh>
             <sphereGeometry args={[planet.radius * 2.015, 64, 64]} />
             <meshStandardMaterial 
-              color={voidstarPlanetData.surfaceColor}
+              color={planetColorScheme.surfaceColor}
               transparent
               opacity={0.6}
-              emissive={voidstarPlanetData.surfaceColor}
+              emissive={planetColorScheme.surfaceColor}
               emissiveIntensity={0.15}
               roughness={0.8}
               metalness={0.2}
               envMapIntensity={1.5}
             />
           </mesh>
-          
-          {/* Enhanced cloud layer with realistic patterns and variations */}
-          <mesh ref={cloudsRef}>
-            <sphereGeometry args={[planet.radius * 2.06, 96, 96]} />
-            <meshStandardMaterial 
-              color={voidstarPlanetData.cloudColor}
-              transparent
-              opacity={0.55}
-              emissive={voidstarPlanetData.cloudColor}
-              emissiveIntensity={0.2}
-              roughness={0.85}
-              metalness={0.15}
-              envMapIntensity={1.0}
-            />
-          </mesh>
-          
-          {/* Additional cloud detail layer for more realistic patterns */}
+        )}
+        
+        {/* Enhanced cloud layer with realistic patterns and variations */}
+        <mesh ref={cloudsRef}>
+          <sphereGeometry args={[planet.radius * 2.06, 96, 96]} />
+          <meshStandardMaterial 
+            color={planetColorScheme.cloudColor}
+            transparent
+            opacity={isVoidstar ? 0.55 : 0.4}
+            emissive={planetColorScheme.cloudColor}
+            emissiveIntensity={isVoidstar ? 0.2 : 0.1}
+            roughness={isVoidstar ? 0.85 : 0.8}
+            metalness={isVoidstar ? 0.15 : 0.1}
+            envMapIntensity={isVoidstar ? 1.0 : 0.8}
+          />
+        </mesh>
+        
+        {/* Additional cloud detail layer for more realistic patterns */}
+        {isVoidstar && (
           <mesh>
             <sphereGeometry args={[planet.radius * 2.08, 64, 64]} />
             <meshStandardMaterial 
-              color={voidstarPlanetData.cloudColor}
+              color={planetColorScheme.cloudColor}
               transparent
               opacity={0.3}
-              emissive={voidstarPlanetData.cloudColor}
+              emissive={planetColorScheme.cloudColor}
               emissiveIntensity={0.1}
               roughness={0.95}
               metalness={0.05}
               envMapIntensity={0.6}
             />
           </mesh>
-          
-          {/* Thick atmospheric glow with scattering effect */}
-          <mesh ref={atmosphereRef}>
-            <sphereGeometry args={[planet.radius * 2.18, 48, 48]} />
-            <meshStandardMaterial 
-              color={voidstarPlanetData.atmosphereColor}
-              transparent
-              opacity={0.4}
-              emissive={voidstarPlanetData.atmosphereColor}
-              emissiveIntensity={0.5}
-              side={2}
-              roughness={0.0}
-              metalness={0.0}
-              envMapIntensity={0.6}
-            />
-          </mesh>
-          
-          {/* Outer atmospheric halo for realistic glow */}
+        )}
+        
+        {/* Thick atmospheric glow with scattering effect */}
+        <mesh ref={atmosphereRef}>
+          <sphereGeometry args={[planet.radius * 2.18, 48, 48]} />
+          <meshStandardMaterial 
+            color={planetColorScheme.atmosphereColor}
+            transparent
+            opacity={isVoidstar ? 0.4 : 0.3}
+            emissive={planetColorScheme.atmosphereColor}
+            emissiveIntensity={isVoidstar ? 0.5 : 0.2}
+            side={2}
+            roughness={0.0}
+            metalness={0.0}
+            envMapIntensity={isVoidstar ? 0.6 : 0.4}
+          />
+        </mesh>
+        
+        {/* Outer atmospheric halo for realistic glow */}
+        {isVoidstar && (
           <mesh>
             <sphereGeometry args={[planet.radius * 2.35, 32, 32]} />
             <meshStandardMaterial 
-              color={voidstarPlanetData.atmosphereColor}
+              color={planetColorScheme.atmosphereColor}
               transparent
               opacity={0.15}
-              emissive={voidstarPlanetData.atmosphereColor}
+              emissive={planetColorScheme.atmosphereColor}
               emissiveIntensity={0.8}
               side={2}
               roughness={0.0}
@@ -379,108 +514,8 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
               envMapIntensity={0.3}
             />
           </mesh>
-        </>
-      ) : (
-        <>
-          {/* Regular planets also get enhanced realistic layers */}
-          {/* Enhanced surface details with terrain features */}
-          <mesh ref={surfaceRef}>
-            <sphereGeometry args={[planet.radius * 2.01, 96, 96]} />
-            <meshStandardMaterial 
-              color={planetColor}
-              transparent
-              opacity={0.85}
-              roughness={0.4}
-              metalness={0.6}
-              envMapIntensity={2.2}
-            />
-          </mesh>
-          
-          {/* Ocean/water layer for realistic surface */}
-          <mesh>
-            <sphereGeometry args={[planet.radius * 2.005, 72, 72]} />
-            <meshStandardMaterial 
-              color={adjustColorBrightness(planetColor, -20)}
-              transparent
-              opacity={0.5}
-              roughness={0.15}
-              metalness={0.7}
-              envMapIntensity={2.0}
-            />
-          </mesh>
-          
-          {/* Land mass/continental details */}
-          <mesh>
-            <sphereGeometry args={[planet.radius * 2.012, 48, 48]} />
-            <meshStandardMaterial 
-              color={adjustColorBrightness(planetColor, 15)}
-              transparent
-              opacity={0.4}
-              roughness={0.75}
-              metalness={0.25}
-              envMapIntensity={1.2}
-            />
-          </mesh>
-          
-          {/* Enhanced cloud layer with realistic patterns */}
-          <mesh ref={cloudsRef}>
-            <sphereGeometry args={[planet.radius * 2.05, 72, 72]} />
-            <meshStandardMaterial 
-              color="#FFFFFF"
-              transparent
-              opacity={0.35}
-              roughness={0.9}
-              metalness={0.1}
-              envMapIntensity={0.8}
-            />
-          </mesh>
-          
-          {/* Secondary cloud layer for depth and realism */}
-          <mesh>
-            <sphereGeometry args={[planet.radius * 2.07, 48, 48]} />
-            <meshStandardMaterial 
-              color="#F0F8FF"
-              transparent
-              opacity={0.2}
-              roughness={0.95}
-              metalness={0.05}
-              envMapIntensity={0.5}
-            />
-          </mesh>
-          
-          {/* Atmosphere */}
-          <mesh ref={atmosphereRef}>
-            <sphereGeometry args={[planet.radius * 2.12, 32, 32]} />
-            <meshStandardMaterial 
-              color={planetColor}
-              transparent
-              opacity={0.3}
-              emissive={planetColor}
-              emissiveIntensity={0.2}
-              side={2}
-              roughness={0.0}
-              metalness={0.0}
-              envMapIntensity={0.4}
-            />
-          </mesh>
-          
-          {/* Outer glow */}
-          <mesh>
-            <sphereGeometry args={[planet.radius * 2.25, 24, 24]} />
-            <meshStandardMaterial 
-              color={planetColor}
-              transparent
-              opacity={0.1}
-              emissive={planetColor}
-              emissiveIntensity={0.4}
-              side={2}
-              roughness={0.0}
-              metalness={0.0}
-              envMapIntensity={0.2}
-            />
-          </mesh>
-        </>
-      )}
+        )}
+      </>
 
       {hovered && (
         <Html
@@ -505,18 +540,23 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
 function OrbitRings({ planets, starColor }: { planets: PlanetData[]; starColor: string }) {
   return (
     <group>
-      {planets.map((planet) => (
-        <mesh key={`ring-${planet.id}`} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[planet.distance * 8 - 0.05, planet.distance * 8 + 0.05, 64]} />
-          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.6} side={2} />
-        </mesh>
-      ))}
+      {planets.map((planet, i) => {
+        const base = ORBIT_BASE + i * ORBIT_SPACING
+        const r = base + (i === 0 ? ORBIT_FIRST_EXTRA : 0)
+        return (
+          <mesh key={`ring-${planet.id}`} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[r - 0.05, r + 0.05, 64]} />
+            <meshBasicMaterial color="#FFFFFF" transparent opacity={0.6} side={2} />
+          </mesh>
+        )
+      })}
     </group>
   )
 }
 
 function CentralStar({ star }: { star: StarData }) {
   const meshRef = useRef<THREE.Mesh>(null!)
+  const fireParticlesRef = useRef<THREE.Group>(null!)
   const { focusOnObject } = useStarStore()
   const [hovered, setHovered] = useState(false)
 
@@ -577,16 +617,66 @@ function CentralStar({ star }: { star: StarData }) {
 
   useFrame((state) => {
     if (meshRef.current) {
-      // Realistic stellar pulsation based on star type and mass
-      const pulsationSpeed = starVisuals.activity * 1.5
-      const pulsationAmount = star.type?.includes("Giant") ? 0.15 : 0.08
-      const pulse = Math.sin(state.clock.elapsedTime * pulsationSpeed) * pulsationAmount + 1
-      meshRef.current.scale.setScalar(starSize * pulse)
-
       // Surface convection rotation
-      meshRef.current.rotation.y += 0.002 * starVisuals.activity
+      meshRef.current.rotation.y += 0.002 * starVisuals.activity * (star.type?.includes("Giant") ? 0.5 : 1)
+
+      // Add constant intense glow for Sun (no pulsing)
+      if (isSun) {
+        const material = meshRef.current.material as THREE.MeshStandardMaterial
+        if (material) {
+          // Keep constant maximum glow intensity
+          material.emissiveIntensity = 2.0
+        }
+      }
     }
 
+    // Animate fire particles for Sun
+    if (isSun && fireParticlesRef.current) {
+      const time = state.clock.elapsedTime
+      const children = fireParticlesRef.current.children
+
+      // Animate outer fire layer (first 24 particles)
+      for (let i = 0; i < Math.min(24, children.length); i++) {
+        const mesh = children[i] as THREE.Mesh
+        const offset = i * 0.3
+
+        // Create aggressive flickering flame motion
+        const flickerX = Math.sin(time * 3.5 + offset) * 0.25
+        const flickerY = Math.sin(time * 3 + offset) * 0.18
+        const flickerZ = Math.cos(time * 2.8 + offset) * 0.25
+
+        mesh.position.set(flickerX, flickerY, flickerZ)
+
+        // Aggressive scale animation for flame size variation
+        const scale = 0.85 + Math.sin(time * 5 + offset) * 0.25
+        mesh.scale.setScalar(scale)
+
+        // Faster rotation for angry flames
+        mesh.rotation.y = time * 0.5 + offset * 0.7
+        mesh.rotation.x = Math.sin(time * 2.5 + offset) * 0.4
+      }
+
+      // Animate inner fire layer (remaining particles)
+      for (let i = 24; i < children.length; i++) {
+        const mesh = children[i] as THREE.Mesh
+        const offset = (i - 24) * 0.4
+
+        // Create very intense inner flame motion
+        const flickerX = Math.sin(time * 6 + offset) * 0.15
+        const flickerY = Math.sin(time * 5.5 + offset) * 0.12
+        const flickerZ = Math.cos(time * 4.8 + offset) * 0.15
+
+        mesh.position.set(flickerX, flickerY, flickerZ)
+
+        // Very aggressive scale variation for inner flames
+        const scale = 0.9 + Math.sin(time * 7 + offset) * 0.2
+        mesh.scale.setScalar(scale)
+
+        // Very fast rotation for inner flames
+        mesh.rotation.y = time * 0.9 + offset * 0.9
+        mesh.rotation.x = Math.sin(time * 3.5 + offset) * 0.5
+      }
+    }
   })
 
   const handleStarClick = () => {
@@ -612,17 +702,114 @@ function CentralStar({ star }: { star: StarData }) {
         onClick={handleStarClick}
       >
         <sphereGeometry args={[1, 64, 64]} />
-        <meshStandardMaterial 
-          color={starVisuals.core} 
-          emissive={starVisuals.core}
-          emissiveIntensity={0.8}
-          roughness={0.2}
-          metalness={0.0}
-        />
+        {isSun ? (
+          // Sun gets fireball design
+          <meshStandardMaterial
+            color="#FF0000"
+            emissive="#CC0000"
+            emissiveIntensity={2.0}
+            roughness={0.02}
+            metalness={0.0}
+          />
+        ) : (
+          // Other stars get normal design
+          <meshStandardMaterial
+            color={starVisuals.core}
+            emissive={starVisuals.core}
+            emissiveIntensity={0.8}
+            roughness={0.2}
+            metalness={0.0}
+          />
+        )}
       </mesh>
 
       {/* Enhanced lighting for realistic illumination */}
-      <pointLight position={[0, 0, 0]} intensity={starVisuals.activity * 2} color={starVisuals.core} distance={50} />
+      <pointLight
+        position={[0, 0, 0]}
+        intensity={isSun ? starVisuals.activity * 6 : starVisuals.activity * 2}
+        color={isSun ? "#FF0000" : starVisuals.core}
+        distance={60}
+      />
+
+      {/* Fire particles for Sun */}
+      {isSun && (
+        <group ref={fireParticlesRef}>
+          {/* Create a spherical shell of fire around the Sun */}
+          {Array.from({ length: 24 }, (_, i) => {
+            const phi = Math.acos(2 * Math.random() - 1) // Random spherical coordinate
+            const theta = Math.random() * Math.PI * 2
+            const radius = 1.8 + Math.random() * 0.4 // Fire shell radius
+
+            const x = radius * Math.sin(phi) * Math.cos(theta)
+            const y = radius * Math.sin(phi) * Math.sin(theta)
+            const z = radius * Math.cos(phi)
+
+            return (
+              <mesh key={i} position={[x, y, z]}>
+                <sphereGeometry args={[0.08 + Math.random() * 0.06, 6, 6]} />
+                <meshStandardMaterial
+                  color={`#${Math.random() > 0.5 ? 'FF' : 'EE'}${'0'}${'0'}00`}
+                  emissive={`#${Math.random() > 0.5 ? 'CC' : 'AA'}${'0'}${'0'}00`}
+                  emissiveIntensity={1.2}
+                  transparent
+                  opacity={0.8 + Math.random() * 0.2}
+                />
+              </mesh>
+            )
+          })}
+
+          {/* Additional inner fire layer for density */}
+          {Array.from({ length: 16 }, (_, i) => {
+            const phi = Math.acos(2 * Math.random() - 1)
+            const theta = Math.random() * Math.PI * 2
+            const radius = 1.4 + Math.random() * 0.3
+
+            const x = radius * Math.sin(phi) * Math.cos(theta)
+            const y = radius * Math.sin(phi) * Math.sin(theta)
+            const z = radius * Math.cos(phi)
+
+            return (
+              <mesh key={`inner-${i}`} position={[x, y, z]}>
+                <sphereGeometry args={[0.06 + Math.random() * 0.04, 5, 5]} />
+                <meshStandardMaterial
+                  color="#EE0000"
+                  emissive="#AA0000"
+                  emissiveIntensity={1.5}
+                  transparent
+                  opacity={0.9 + Math.random() * 0.1}
+                />
+              </mesh>
+            )
+          })}
+        </group>
+      )}
+
+      {/* Outer glow effect for Sun */}
+      {isSun && (
+        <group>
+          {/* Large outer glow sphere */}
+          <mesh>
+            <sphereGeometry args={[2.5, 32, 32]} />
+            <meshBasicMaterial
+              color="#FF0000"
+              transparent
+              opacity={0.15}
+            />
+          </mesh>
+
+          
+
+          {/* Small inner glow */}
+          <mesh>
+            <sphereGeometry args={[2.0, 24, 24]} />
+            <meshBasicMaterial
+              color="#FF0000"
+              transparent
+              opacity={0.08}
+            />
+          </mesh>
+        </group>
+      )}
 
       {hovered && (
         <Html position={[0, 5, 0]} center distanceFactor={15}>
@@ -703,6 +890,11 @@ export function StarSystem() {
 
   if (!zoomedStar || !zoomedStar.planetData) return null
 
+  // Calculate the radius for the green zone outside the last orbit
+  const lastOrbitIndex = zoomedStar.planetData.length - 1
+  const lastOrbitRadius = ORBIT_BASE + lastOrbitIndex * ORBIT_SPACING + (lastOrbitIndex === 0 ? ORBIT_FIRST_EXTRA : 0)
+  const greenZoneRadius = lastOrbitRadius + 1.5 // Add some padding outside the last orbit
+
   return (
     <group>
       <CentralStar star={zoomedStar} />
@@ -712,6 +904,16 @@ export function StarSystem() {
       {zoomedStar.planetData.map((planet, index) => (
         <OrbitingPlanet key={planet.id} planet={planet} starColor={zoomedStar.color} index={index} />
       ))}
+
+      {/* Light green zone outside the last orbit */}
+      <mesh>
+        <sphereGeometry args={[greenZoneRadius, 32, 32]} />
+        <meshBasicMaterial
+          color="#00FF00"
+          transparent
+          opacity={0.08}
+        />
+      </mesh>
     </group>
   )
 }
@@ -739,3 +941,6 @@ export function StarSystemUI() {
     </>
   )
 }
+
+// Export the color generation function for use in other components
+export { generatePlanetColorScheme }
