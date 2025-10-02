@@ -4,7 +4,7 @@ import { useStarStore } from "@/lib/star-store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Home, Brain, Zap, Activity, Filter, BarChart3, Target, TrendingUp, X } from "lucide-react"
+import { ArrowLeft, Home, Brain, Zap, Activity, Filter, BarChart3, Target, TrendingUp, X, Settings } from "lucide-react"
 import { useState, createContext, useContext } from "react"
 
 // Create context for mission filter
@@ -23,7 +23,7 @@ const MissionFilterContext = createContext<{
 export const useMissionFilter = () => useContext(MissionFilterContext)
 
 export function ExoplanetDetectionUI() {
-  const { returnToSpace, currentView } = useStarStore()
+  const { returnToSpace, goToHyperparameterTuning, currentView } = useStarStore()
   const [selectedMission, setSelectedMission] = useState<string>("all")
   const [isSpinning, setIsSpinning] = useState<boolean>(false)
   const [analysisData, setAnalysisData] = useState<any>(null)
@@ -169,6 +169,19 @@ export function ExoplanetDetectionUI() {
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Space
+        </Button>
+      </div>
+
+      {/* Hyper Parameter Tuning Button */}
+      <div className="fixed top-4 right-4 z-[60]">
+        <Button
+          onClick={goToHyperparameterTuning}
+          variant="outline"
+          size="lg"
+          className="bg-black/80 border-purple-500/40 text-white hover:bg-purple-900/40 hover:border-purple-400/60 backdrop-blur-sm transition-all duration-200 hover:scale-105 text-base px-6 py-3 shadow-lg shadow-purple-500/20 hover:shadow-purple-400/30"
+        >
+          <Settings className="w-5 h-5 mr-2 text-purple-300" />
+          Hyper Parameter Tuning
         </Button>
       </div>
 
