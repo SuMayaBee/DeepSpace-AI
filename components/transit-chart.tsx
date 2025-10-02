@@ -85,7 +85,7 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
           Detecting {planetName} transiting {starName}
         </div>
         
-        {/* Chart */}
+        {/* Main Chart */}
         <div className="h-48 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={transitData}>
@@ -132,6 +132,7 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
             </LineChart>
           </ResponsiveContainer>
         </div>
+        
         
         {/* Transit Statistics */}
         <div className="space-y-2">
