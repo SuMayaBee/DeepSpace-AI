@@ -38,6 +38,10 @@ function adjustColorBrightness(color: string, amount: number): string {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
 }
 
+// Uniform orbit spacing for all planets/rings
+const ORBIT_BASE = 3 // inner offset from the star
+const ORBIT_SPACING = 2.5 // constant spacing between consecutive orbits
+
 function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; starColor: string; index: number }) {
   const planetRef = useRef<THREE.Mesh>(null!)
   const atmosphereRef = useRef<THREE.Mesh>(null!)
@@ -96,7 +100,8 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
     setAngle((prev) => prev + planet.orbitSpeed * 0.01)
 
     if (planetRef.current) {
-      const orbitRadius = planet.distance * 2 + 3
+      // Enforce uniform orbit spacing by index
+      const orbitRadius = ORBIT_BASE + index * ORBIT_SPACING
       const x = Math.cos(angle) * orbitRadius
       const z = Math.sin(angle) * orbitRadius
       
@@ -505,12 +510,15 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
 function OrbitRings({ planets, starColor }: { planets: PlanetData[]; starColor: string }) {
   return (
     <group>
-      {planets.map((planet) => (
-        <mesh key={`ring-${planet.id}`} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[planet.distance * 2 + 3 - 0.05, planet.distance * 2 + 3 + 0.05, 64]} />
-          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.6} side={2} />
-        </mesh>
-      ))}
+      {planets.map((planet, i) => {
+        const r = ORBIT_BASE + i * ORBIT_SPACING
+        return (
+          <mesh key={`ring-${planet.id}`} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[r - 0.05, r + 0.05, 64]} />
+            <meshBasicMaterial color="#FFFFFF" transparent opacity={0.6} side={2} />
+          </mesh>
+        )
+      })}
     </group>
   )
 }
