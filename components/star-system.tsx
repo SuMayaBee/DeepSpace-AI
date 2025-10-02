@@ -745,6 +745,42 @@ function CentralStar({ star }: { star: StarData }) {
         </group>
       )}
 
+      {/* Outer glow effect for Sun */}
+      {isSun && (
+        <group>
+          {/* Large outer glow sphere */}
+          <mesh>
+            <sphereGeometry args={[2.5, 32, 32]} />
+            <meshBasicMaterial
+              color="#FF0000"
+              transparent
+              opacity={0.15}
+            />
+          </mesh>
+
+          {/* Medium glow ring */}
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[2.2, 2.8, 32]} />
+            <meshBasicMaterial
+              color="#FF0000"
+              transparent
+              opacity={0.25}
+              side={2}
+            />
+          </mesh>
+
+          {/* Small inner glow */}
+          <mesh>
+            <sphereGeometry args={[2.0, 24, 24]} />
+            <meshBasicMaterial
+              color="#FF0000"
+              transparent
+              opacity={0.08}
+            />
+          </mesh>
+        </group>
+      )}
+
       {hovered && (
         <Html position={[0, 5, 0]} center distanceFactor={15}>
           <div className="bg-black/90 text-white px-4 py-3 rounded-lg text-sm font-medium border border-white/30 backdrop-blur-sm">
