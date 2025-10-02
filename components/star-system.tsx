@@ -264,23 +264,17 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
         surfaceRef.current.position.y = 0
       }
 
-      // Check if planet is in center of view (front of camera, facing positive Z)
-      const isPlanetInCenter = z > orbitRadius * 0.8 // Planet is in front when Z is positive and large
+      // Check if planet is in lower-middle sector of orbit (bottom and horizontally centered)
+      // Conditions: deep negative Z AND small |X| relative to radius
+      const isBottom = z < -orbitRadius * 0.9
+      const isCenteredHorizontally = Math.abs(x) < orbitRadius * 0.25
+      const isPlanetInLowerMiddle = isBottom && isCenteredHorizontally
       
-      if (isPlanetInCenter) {
+      if (isPlanetInLowerMiddle) {
         setPlanetInCenter(true)
-        setChartPosition("lower") // Move chart down when planet is in center
       } else {
-        // Check if any planet is still in center by checking if this planet just left center
-        const wasInCenter = Math.cos(angle - planet.orbitSpeed * 0.01) * orbitRadius > orbitRadius * 0.8
-        if (wasInCenter && !isPlanetInCenter) {
-          // This planet just left center, check if other planets might be in center
-          // For simplicity, we'll reset after a short delay
-          setTimeout(() => {
-            setPlanetInCenter(false)
-            setChartPosition("middle") // Reset chart to middle position
-          }, 1000)
-        }
+        // Immediately clear when this planet is out of the lower-middle sector
+        setPlanetInCenter(false)
       }
 
       // Realistic planet rotation with different speeds for layers

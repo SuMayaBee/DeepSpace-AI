@@ -28,48 +28,33 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
       setChartOffset(0)
     }
   }, [planetInCenter])
-  // Generate realistic transit data with dynamic properties
+  // Generate simple transit data based on planet position
   const transitData = useMemo(() => {
     const data = []
     const totalPoints = 100
-    const transitDuration = 20 // points where transit occurs
-    const transitStart = 40 // when transit starts
-    
-    // Base stellar brightness (normalized to 1.0)
-    const baseBrightness = 1.0
     
     for (let i = 0; i < totalPoints; i++) {
-      let brightness = baseBrightness
+      let brightness = 1.0 // Base stellar brightness
       
-      // Add some stellar noise
-      const noise = (Math.random() - 0.5) * 0.005
-      
-      // Transit detection - light curve dip with dynamic depth
-      if (i >= transitStart && i < transitStart + transitDuration) {
-        const transitProgress = (i - transitStart) / transitDuration
-        
-        // Create realistic transit shape (ingress, flat bottom, egress)
-        if (transitProgress < 0.1) {
-          // Ingress - gradual decrease
-          brightness -= dynamicTransitDepth * (transitProgress / 0.1)
-        } else if (transitProgress < 0.9) {
-          // Flat bottom - full transit
-          brightness -= dynamicTransitDepth
-        } else {
-          // Egress - gradual increase
-          brightness -= dynamicTransitDepth * (1 - (transitProgress - 0.9) / 0.1)
+      if (planetInCenter) {
+        // When planet is in center, create a downward dip in the middle
+        if (i >= 40 && i <= 60) {
+          // Simple downward line in the middle section
+          brightness = 0.95 // Lower brightness when planet transits
         }
+      } else {
+        // When planet is not in center, show straight line
+        brightness = 1.0 // Constant brightness
       }
       
       data.push({
         time: i,
-        brightness: brightness + noise - chartOffset, // Apply dynamic offset
-        phase: i >= transitStart && i < transitStart + transitDuration ? "transit" : "normal"
+        brightness: brightness
       })
     }
     
     return data
-  }, [planetName, starName, dynamicTransitDepth, chartOffset])
+  }, [planetInCenter])
 
   return (
     <Card className="bg-black/50 border-white/20 backdrop-blur-sm transition-all duration-500 hover:bg-black/60 w-96">
@@ -80,10 +65,6 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
-        {/* Transit Info */}
-        <div className="text-xs text-cyan-300/80 italic mb-3">
-          Detecting {planetName} transiting {starName}
-        </div>
         
         {/* Main Chart */}
         <div className="h-48 w-full">
@@ -132,7 +113,6 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
             </LineChart>
           </ResponsiveContainer>
         </div>
-        
         
         {/* Transit Statistics */}
         <div className="space-y-2">
