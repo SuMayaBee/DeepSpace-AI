@@ -13,7 +13,7 @@ export function StarInfoPanel() {
 
   return (
     <div className="fixed top-4 right-4 w-80 z-10">
-      <Card className="bg-cyan-900/50 border-cyan-400/30 text-white backdrop-blur-md">
+      <Card className="!bg-cyan-900/20 !border-cyan-400/30 text-white backdrop-blur-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-bold flex items-center gap-2">
@@ -29,7 +29,7 @@ export function StarInfoPanel() {
               <X className="w-4 h-4" />
             </Button>
           </div>
-          <Badge variant="secondary" className="w-fit">
+          <Badge variant="secondary" className="w-fit bg-cyan-500/10 border border-cyan-400/30 text-cyan-200">
             {selectedStar.type}
           </Badge>
         </CardHeader>
@@ -79,7 +79,7 @@ export function StarInfoPanel() {
 
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-white/70">Constellation</h4>
-            <Badge variant="outline" className="border-white/30 text-white">
+            <Badge variant="outline" className="border-cyan-400/30 text-cyan-200 bg-cyan-500/5">
               {selectedStar.constellation}
             </Badge>
           </div>
@@ -89,7 +89,7 @@ export function StarInfoPanel() {
               <h4 className="text-sm font-medium text-white/70">Known Planets</h4>
               <div className="flex flex-wrap gap-1">
                 {selectedStar.planets.map((planet) => (
-                  <Badge key={planet} variant="secondary" className="text-xs bg-white/10 text-white/90">
+                  <Badge key={planet} variant="secondary" className="text-xs bg-cyan-500/10 border border-cyan-400/30 text-cyan-200">
                     {planet}
                   </Badge>
                 ))}

@@ -174,7 +174,7 @@ export function ExoplanetDetectionUI() {
 
       {/* Page Title */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[60]">
-        <h1 className="text-2xl font-bold text-white bg-black/50 px-6 py-2 rounded-lg backdrop-blur-sm border border-white/20">
+        <h1 className="text-2xl font-bold text-white bg-cyan-900/30 px-6 py-2 rounded-lg backdrop-blur-sm border border-cyan-400/30 transition-all duration-500 hover:bg-cyan-900/40">
           Exoplanet Detection Model
         </h1>
       </div>

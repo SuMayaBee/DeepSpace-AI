@@ -862,7 +862,7 @@ export function SpaceUI() {
       <div className="fixed top-4 right-4 z-20">
         <button
           onClick={() => setShowLiveDetections(!showLiveDetections)}
-          className="bg-black/30 border border-white/20 text-white backdrop-blur-md hover:bg-black/40 transition-all duration-300 rounded-lg px-4 py-3 flex items-center gap-3"
+          className="bg-cyan-900/30 border border-cyan-400/30 text-white backdrop-blur-md hover:bg-cyan-900/40 transition-all duration-300 rounded-lg px-4 py-3 flex items-center gap-3"
         >
           <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
           <div>
@@ -873,8 +873,8 @@ export function SpaceUI() {
         </button>
         
         {showLiveDetections && (
-          <div className="absolute top-full right-0 mt-2 w-96 bg-black/90 border border-white/20 rounded-lg backdrop-blur-md shadow-2xl max-h-96 overflow-y-auto">
-            <div className="p-4 border-b border-white/10">
+          <div className="absolute top-full right-0 mt-2 w-96 bg-cyan-900/60 border border-cyan-400/30 rounded-lg backdrop-blur-md shadow-2xl max-h-96 overflow-y-auto">
+            <div className="p-4 border-b border-cyan-400/20">
               <div className="flex items-center justify-between">
                 <h3 className="text-white font-semibold">Recent Detections</h3>
                 <Badge className="bg-green-500/20 text-green-400 border-green-400/30">
@@ -885,7 +885,7 @@ export function SpaceUI() {
             </div>
             <div className="max-h-80 overflow-y-auto">
               {recentDetections.map((detection, index) => (
-                <div key={index} className="p-4 border-b border-white/5 hover:bg-white/5 transition-colors">
+                <div key={index} className="p-4 border-b border-cyan-400/10 hover:bg-cyan-500/5 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">

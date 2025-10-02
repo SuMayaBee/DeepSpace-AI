@@ -523,7 +523,7 @@ export function FocusedObjectUI() {
         </Button>
       </div>
 
-      <div className="fixed top-20 right-4 z-50 bg-black/95 text-white p-6 rounded-lg border border-white/30 backdrop-blur-sm max-w-sm">
+      <div className="fixed top-20 right-4 z-50 bg-cyan-900/50 text-white p-6 rounded-lg border border-cyan-400/30 backdrop-blur-sm max-w-sm">
         <h2 className="text-2xl font-bold mb-3 text-white">{objectName}</h2>
         <div className="text-sm text-white/80 space-y-2">
           <div>Type: {objectInfo.type}</div>
@@ -532,9 +532,9 @@ export function FocusedObjectUI() {
               <div>{objectInfo.distance}</div>
               {objectInfo.temperature && <div>Temperature: {objectInfo.temperature}</div>}
               {focusedObject.parentStar && (
-                <div className="mt-4 pt-4 border-t border-white/20">
-                  <div className="text-xs text-white/60">Parent Star:</div>
-                  <div className="font-medium">{focusedObject.parentStar.name}</div>
+                <div className="mt-4 pt-4 border-t border-cyan-400/20">
+                  <div className="text-xs text-cyan-300">Parent Star:</div>
+                  <div className="font-medium text-cyan-200">{focusedObject.parentStar.name}</div>
                 </div>
               )}
             </>

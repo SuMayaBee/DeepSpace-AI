@@ -838,11 +838,11 @@ function CentralStar({ star }: { star: StarData }) {
 
       {hovered && (
         <Html position={[0, 5, 0]} center distanceFactor={15}>
-          <div className="bg-black/90 text-white px-4 py-3 rounded-lg text-sm font-medium border border-white/30 backdrop-blur-sm">
+          <div className="bg-cyan-900/70 text-white px-4 py-3 rounded-lg text-sm font-medium border border-cyan-400/30 backdrop-blur-sm">
             <div className="font-bold text-lg">{star.name}</div>
             <div className="text-xs text-white/70 mt-1">{star.type}</div>
             <div className="text-xs text-white/60">Temperature: {starVisuals.temperature.toLocaleString()}K</div>
-            <div className="text-xs text-blue-400 mt-2">Click to explore in detail</div>
+            <div className="text-xs text-cyan-400 mt-2">Click to explore in detail</div>
           </div>
         </Html>
       )}
@@ -869,10 +869,10 @@ function StarSystemInfo({ star }: { star: StarData }) {
   }
 
   return (
-    <div className="fixed top-20 right-4 z-50 bg-black/95 text-white p-6 rounded-lg border border-white/30 backdrop-blur-sm max-w-sm">
+    <div className="fixed top-20 right-4 z-50 bg-cyan-900/50 text-white p-6 rounded-lg border border-cyan-400/30 backdrop-blur-sm max-w-sm">
       <div className="mb-6">
         <h2
-          className="text-2xl font-bold mb-3 text-white cursor-pointer hover:text-blue-400 transition-colors"
+          className="text-2xl font-bold mb-3 text-white cursor-pointer hover:text-cyan-400 transition-colors"
           onClick={handleStarClick}
         >
           {star.name}
@@ -891,16 +891,16 @@ function StarSystemInfo({ star }: { star: StarData }) {
             {star.planetData.map((planet, index) => (
               <div
                 key={planet.id}
-                className="border-l-2 border-orange-500/50 pl-4 cursor-pointer hover:bg-white/5 rounded p-2 transition-colors"
+                className="border-l-2 border-cyan-400/40 pl-4 cursor-pointer hover:bg-cyan-500/5 rounded p-2 transition-colors"
                 onClick={() => handlePlanetClick(planet)}
               >
-                <div className="font-medium text-base text-orange-400 mb-1">{planet.name}</div>
+                <div className="font-medium text-base text-cyan-300 mb-1">{planet.name}</div>
                 <div className="text-xs text-white/70 space-y-1">
                   <div>{planet.type}</div>
                   <div>{planet.distance.toFixed(2)} AU from star</div>
                   {planet.temperature && <div>~{Math.round(planet.temperature)}K</div>}
                 </div>
-                <div className="text-xs text-blue-400 mt-1">Click to explore</div>
+                <div className="text-xs text-cyan-400 mt-1">Click to explore</div>
               </div>
             ))}
           </div>
