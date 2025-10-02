@@ -523,7 +523,7 @@ export function FocusedObjectUI() {
         </Button>
       </div>
 
-      <div className="fixed top-20 left-4 z-50 bg-black/95 text-white p-6 rounded-lg border border-white/30 backdrop-blur-sm max-w-sm">
+      <div className="fixed top-20 right-4 z-50 bg-black/95 text-white p-6 rounded-lg border border-white/30 backdrop-blur-sm max-w-sm">
         <h2 className="text-2xl font-bold mb-3 text-white">{objectName}</h2>
         <div className="text-sm text-white/80 space-y-2">
           <div>Type: {objectInfo.type}</div>
