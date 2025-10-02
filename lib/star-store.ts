@@ -60,6 +60,7 @@ interface StarStore {
   returnToStarSystem: () => void
   returnToSpace: () => void
   goToExoplanetDetection: () => void
+  goToHyperparameterTuning: () => void
   triggerFilterSpin: () => void
 }
 
@@ -139,6 +140,13 @@ export const useStarStore = create<StarStore>((set, get) => ({
       selectedStar: null,
       focusedObject: null,
       navigationSource: null,
+    }),
+  goToHyperparameterTuning: () =>
+    set({
+      currentView: "hyperparameter-tuning",
+      zoomedStar: null,
+      selectedStar: null,
+      focusedObject: null,
     }),
   triggerFilterSpin: () => {
     set({ isFilterSpinning: true })

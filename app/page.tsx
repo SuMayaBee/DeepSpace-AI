@@ -12,6 +12,8 @@ import { SpaceUI } from "@/components/space-ui"
 import { DynamicLighting } from "@/components/dynamic-lighting"
 import { ExoplanetDetection } from "@/components/exoplanet-detection"
 import { ExoplanetDetectionUI } from "@/components/exoplanet-detection-ui"
+import { HyperparameterTuning } from "@/components/hyperparameter-tuning"
+import { HyperparameterTuningUI } from "@/components/hyperparameter-tuning-ui"
 import { useStarStore } from "@/lib/star-store"
 
 export default function HomePage() {
@@ -48,6 +50,8 @@ export default function HomePage() {
         return [0, 0, 15]
       case "exoplanet-detection":
         return [0, 20, 40]
+      case "hyperparameter-tuning":
+        return [0, 15, 30]
       default:
         return [0, 0, 120]
     }
@@ -75,6 +79,14 @@ export default function HomePage() {
         return {
           minDistance: 15,
           maxDistance: 80,
+          enablePan: true,
+          enableZoom: true,
+          enableRotate: true,
+        }
+      case "hyperparameter-tuning":
+        return {
+          minDistance: 10,
+          maxDistance: 60,
           enablePan: true,
           enableZoom: true,
           enableRotate: true,
@@ -154,6 +166,14 @@ export default function HomePage() {
             </>
           )}
 
+          {currentView === "hyperparameter-tuning" && (
+            <>
+              <Environment preset="sunset" background={false} />
+              <Stars radius={200} depth={100} count={2000} factor={4} saturation={0.8} fade={true} />
+              <HyperparameterTuning />
+            </>
+          )}
+
           <OrbitControls
             enablePan={orbitSettings.enablePan}
             enableZoom={orbitSettings.enableZoom}
@@ -173,6 +193,7 @@ export default function HomePage() {
       <StarSystemUI />
       <FocusedObjectUI />
       <ExoplanetDetectionUI />
+      <HyperparameterTuningUI />
     </div>
   )
 }

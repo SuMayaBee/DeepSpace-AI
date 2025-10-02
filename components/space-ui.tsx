@@ -209,7 +209,7 @@ export function SpaceUI() {
   }, [])
 
   // Hide UI when in exoplanet detection view
-  if (currentView === "exoplanet-detection") {
+  if (currentView === "exoplanet-detection" || currentView === "hyperparameter-tuning") {
     return null
   }
 
