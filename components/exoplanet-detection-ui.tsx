@@ -38,62 +38,62 @@ export function ExoplanetDetectionUI() {
     "Orbital Period": {
       description: "Time for planet to complete one orbit around its star",
       importance: "Determines planet's year length and habitability zone",
-      color: "blue"
+      color: "pink"
     },
     "Transit Depth": {
       description: "Amount of starlight blocked when planet passes in front",
       importance: "Indicates planet size relative to its star",
-      color: "green"
+      color: "purple"
     },
     "Transit Duration": {
       description: "How long the planet takes to cross the star's disk",
       importance: "Reveals orbital distance and planet size",
-      color: "purple"
+      color: "orange"
     },
     "Planet Radius": {
       description: "Physical size of the exoplanet",
       importance: "Key factor in determining planet type and composition",
-      color: "orange"
+      color: "green"
     },
     "Signal-to-Noise": {
       description: "Quality of the detection signal vs background noise",
       importance: "Higher values mean more reliable detections",
-      color: "pink"
+      color: "blue"
     },
     "Impact Parameter": {
       description: "How close the planet passes to the star's center",
       importance: "Affects transit shape and detection probability",
-      color: "yellow"
+      color: "cyan"
     },
     "Inclination": {
       description: "Angle of planet's orbit relative to our line of sight",
       importance: "Determines if we can observe transits",
-      color: "indigo"
+      color: "pink"
     },
     "Stellar Temperature": {
       description: "Surface temperature of the host star",
       importance: "Affects planet's surface temperature and habitability",
-      color: "teal"
+      color: "purple"
     },
     "Stellar Radius": {
       description: "Size of the host star",
       importance: "Used to calculate planet size from transit depth",
-      color: "lime"
+      color: "orange"
     },
     "Stellar Mass": {
       description: "Mass of the host star",
       importance: "Determines orbital dynamics and planet formation",
-      color: "sky"
+      color: "green"
     },
     "Surface Gravity": {
       description: "Gravitational pull at the star's surface",
       importance: "Affects stellar evolution and planet retention",
-      color: "emerald"
+      color: "blue"
     },
     "Metallicity": {
       description: "Amount of heavy elements in the star",
       importance: "Indicates likelihood of rocky planet formation",
-      color: "violet"
+      color: "cyan"
     }
   }
 
@@ -220,7 +220,7 @@ export function ExoplanetDetectionUI() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0 space-y-2">
-            <div className="text-xs text-cyan-300/80 italic mb-3">
+            <div className="text-sm text-cyan-300/90 italic mb-3 font-medium">
               Trained on NASA Kepler & TESS datasets
             </div>
             
