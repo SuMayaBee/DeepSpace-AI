@@ -7,6 +7,7 @@ import { useStarStore, type StarData, type PlanetData } from "@/lib/star-store"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Home } from "lucide-react"
 import { RingGeometry } from "three"
+import planetPalettes from "@/data/planet-palettes.json"
 
 function DetailedPlanet({ planet, parentStar }: { planet: PlanetData; parentStar?: StarData }) {
   const meshRef = useRef<THREE.Mesh>(null!)
@@ -18,27 +19,11 @@ function DetailedPlanet({ planet, parentStar }: { planet: PlanetData; parentStar
   const landRef = useRef<THREE.Mesh>(null!)
 
   // Planet color palette by real planet name (only colors vary)
-  const palette = useMemo(() => {
-    const name = planet.name?.toLowerCase?.() || ""
-    if (name === "mercury") {
-      return { band1: "#9E9E9E", band2: "#BDBDBD", band3: "#7A7A7A", atmosphere: "#CFCFCF", ocean: "#7A7A7A", land: "#A6A6A6", clouds: "#FFFFFF" }
-    } else if (name === "venus") {
-      return { band1: "#CAA955", band2: "#E3C16F", band3: "#D1B15F", atmosphere: "#E3C880", ocean: "#B9984C", land: "#D9B65C", clouds: "#F5F0E0" }
-    } else if (name === "earth") {
-      return { band1: "#1F5FBF", band2: "#2A6FD6", band3: "#4FA3FF", atmosphere: "#6FB6FF", ocean: "#2B6CB0", land: "#2F855A", clouds: "#FFFFFF" }
-    } else if (name === "mars") {
-      return { band1: "#A23B0A", band2: "#C1440E", band3: "#D8652B", atmosphere: "#D29B6E", ocean: "#A14B19", land: "#D26A2E", clouds: "#F0D0C0" }
-    } else if (name === "jupiter") {
-      return { band1: "#B8865B", band2: "#D9A066", band3: "#F0D0A0", atmosphere: "#EFE2C8", ocean: "#B8865B", land: "#D9A066", clouds: "#FFF6E5" }
-    } else if (name === "saturn") {
-      return { band1: "#CDBB8B", band2: "#E8D8A8", band3: "#F5E7B2", atmosphere: "#F3DEB0", ocean: "#CDBB8B", land: "#E8D8A8", clouds: "#FFF6DC" }
-    } else if (name === "uranus") {
-      return { band1: "#66BFCF", band2: "#78C7D2", band3: "#A3E3EE", atmosphere: "#8BD7E4", ocean: "#66BFCF", land: "#78C7D2", clouds: "#E6FFFF" }
-    } else if (name === "neptune") {
-      return { band1: "#2A5EA3", band2: "#2E66AF", band3: "#5AA1F2", atmosphere: "#4F8BD1", ocean: "#204B82", land: "#2E66AF", clouds: "#E0F0FF" }
-    }
-    // Default stylized palette (for exoplanets/others)
-    return { band1: "#FF3B2E", band2: "#FF7A3D", band3: "#FFC247", atmosphere: "#FFA24C", ocean: "#FF6A2E", land: "#FF9A47", clouds: "#FFFFFF" }
+  type Palette = { band1: string; band2: string; band3: string; atmosphere: string; ocean: string; land: string; clouds: string }
+  const palette = useMemo<Palette>(() => {
+    const key = planet.name?.toLowerCase?.() || ""
+    const map = planetPalettes as Record<string, Palette>
+    return map[key] || map["default"]
   }, [planet.name])
 
   // Enhanced realistic planet features (structure unchanged; colors from palette)
