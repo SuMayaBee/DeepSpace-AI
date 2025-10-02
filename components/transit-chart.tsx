@@ -59,7 +59,7 @@ export function TransitChart({ planetName, starName }: TransitChartProps) {
   return (
     <Card className="bg-black/50 border-white/20 backdrop-blur-sm transition-all duration-500 hover:bg-black/60 w-96">
       <CardHeader className="pb-2">
-        <CardTitle className="text-white text-sm flex items-center gap-2">
+        <CardTitle className="text-white text-lg md:text-xl flex items-center gap-2 font-semibold">
           <Activity className="w-4 h-4 text-cyan-400 animate-pulse" />
           Exoplanet Transit Detection
         </CardTitle>
