@@ -29,6 +29,15 @@ const starColors = [
   "#ADD8E6", // Light blue
 ]
 
+// Helper function to adjust color brightness
+function adjustColorBrightness(color: string, amount: number): string {
+  const num = parseInt(color.replace("#", ""), 16)
+  const r = Math.max(0, Math.min(255, (num >> 16) + amount))
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount))
+  const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount))
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
+}
+
 function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; starColor: string; index: number }) {
   const planetRef = useRef<THREE.Mesh>(null!)
   const atmosphereRef = useRef<THREE.Mesh>(null!)
@@ -151,30 +160,68 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
       }
     }
 
-    // Animate Voidstar planet layers
+    // Enhanced atmospheric scattering and glow animations
     if (isVoidstar) {
       if (atmosphereRef.current) {
-        const atmospherePulse = Math.sin(state.clock.elapsedTime * 2) * 0.1 + 0.9
+        const atmospherePulse = Math.sin(state.clock.elapsedTime * 1.5) * 0.15 + 0.85
         const material = atmosphereRef.current.material as THREE.MeshStandardMaterial
         if (material) {
           material.opacity = 0.4 * atmospherePulse
+          // Dynamic atmospheric scattering effect
+          material.emissiveIntensity = 0.5 * atmospherePulse
         }
-        atmosphereRef.current.rotation.y += 0.008
+        atmosphereRef.current.rotation.y += 0.006
+        atmosphereRef.current.rotation.x += 0.002 // Subtle wobble
       }
       
       if (cloudsRef.current) {
-        const cloudPulse = Math.sin(state.clock.elapsedTime * 1.5 + 1) * 0.15 + 0.85
+        const cloudPulse = Math.sin(state.clock.elapsedTime * 1.2 + 1) * 0.2 + 0.8
         const cloudMaterial = cloudsRef.current.material as THREE.MeshStandardMaterial
         if (cloudMaterial) {
-          cloudMaterial.opacity = 0.7 * cloudPulse
+          cloudMaterial.opacity = 0.6 * cloudPulse
+          // Realistic cloud movement
+          cloudMaterial.emissiveIntensity = 0.15 * cloudPulse
         }
+        cloudsRef.current.rotation.y += 0.01
+        cloudsRef.current.rotation.z += 0.003 // Cloud drift
       }
       
       if (surfaceRef.current) {
-        const surfacePulse = Math.sin(state.clock.elapsedTime * 0.8) * 0.05 + 0.95
+        const surfacePulse = Math.sin(state.clock.elapsedTime * 0.6) * 0.08 + 0.92
         const surfaceMaterial = surfaceRef.current.material as THREE.MeshStandardMaterial
         if (surfaceMaterial) {
-          surfaceMaterial.emissiveIntensity = 0.1 * surfacePulse
+          surfaceMaterial.emissiveIntensity = 0.3 * surfacePulse
+          // Dynamic surface lighting
+          surfaceMaterial.metalness = 0.5 + Math.sin(state.clock.elapsedTime * 0.8) * 0.1
+        }
+      }
+    } else {
+      // Enhanced animations for regular planets
+      if (atmosphereRef.current) {
+        const atmosphereGlow = Math.sin(state.clock.elapsedTime * 2) * 0.1 + 0.9
+        const material = atmosphereRef.current.material as THREE.MeshStandardMaterial
+        if (material) {
+          material.opacity = 0.3 * atmosphereGlow
+          material.emissiveIntensity = 0.2 * atmosphereGlow
+        }
+        atmosphereRef.current.rotation.y += 0.004
+      }
+      
+      if (cloudsRef.current) {
+        const cloudMovement = Math.sin(state.clock.elapsedTime * 1.8) * 0.1 + 0.9
+        const cloudMaterial = cloudsRef.current.material as THREE.MeshStandardMaterial
+        if (cloudMaterial) {
+          cloudMaterial.opacity = 0.4 * cloudMovement
+        }
+        cloudsRef.current.rotation.y += 0.008
+      }
+      
+      if (surfaceRef.current) {
+        const surfaceShimmer = Math.sin(state.clock.elapsedTime * 1.2) * 0.05 + 0.95
+        const surfaceMaterial = surfaceRef.current.material as THREE.MeshStandardMaterial
+        if (surfaceMaterial) {
+          surfaceMaterial.metalness = 0.4 * surfaceShimmer
+          surfaceMaterial.roughness = 0.5 + Math.sin(state.clock.elapsedTime * 0.9) * 0.1
         }
       }
     }
@@ -190,7 +237,7 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
 
   return (
     <>
-      {/* Main planet core */}
+      {/* Main planet core with enhanced realistic materials */}
       <mesh
         ref={planetRef}
         onPointerEnter={() => {
@@ -203,71 +250,233 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
         }}
         onClick={handlePlanetClick}
       >
-        <sphereGeometry args={[planet.radius * 2, 64, 64]} />
+        <sphereGeometry args={[planet.radius * 2, 128, 128]} />
         {isVoidstar ? (
           <meshStandardMaterial 
             color={voidstarPlanetData?.baseColor}
             emissive={voidstarPlanetData?.emissiveColor}
-            emissiveIntensity={0.4}
-            roughness={0.95}
-            metalness={0.05}
-            envMapIntensity={0.8}
+            emissiveIntensity={0.8}
+            roughness={0.75}
+            metalness={0.25}
+            envMapIntensity={1.8}
           />
         ) : (
           <meshStandardMaterial 
             color={planetColor} 
-            roughness={0.9}
-            metalness={0.0}
+            roughness={0.6}
+            metalness={0.4}
+            envMapIntensity={2.0}
           />
         )}
       </mesh>
 
-      {/* Voidstar planets get multi-layered realistic appearance */}
-      {isVoidstar && voidstarPlanetData && (
+      {/* Enhanced realistic planet layers for all planets */}
+      {isVoidstar && voidstarPlanetData ? (
         <>
-          {/* Surface detail layer */}
+          {/* Surface terrain details with continents and oceans */}
           <mesh ref={surfaceRef}>
-            <sphereGeometry args={[planet.radius * 2.02, 64, 64]} />
+            <sphereGeometry args={[planet.radius * 2.01, 128, 128]} />
             <meshStandardMaterial 
               color={voidstarPlanetData.surfaceColor}
               transparent
               opacity={0.9}
               emissive={voidstarPlanetData.surfaceColor}
-              emissiveIntensity={0.2}
-              roughness={0.7}
-              metalness={0.4}
-              envMapIntensity={1.2}
+              emissiveIntensity={0.5}
+              roughness={0.5}
+              metalness={0.7}
+              envMapIntensity={2.5}
             />
           </mesh>
           
-          {/* Cloud layer */}
+          {/* Ocean/liquid layer for realistic water bodies */}
+          <mesh>
+            <sphereGeometry args={[planet.radius * 2.005, 96, 96]} />
+            <meshStandardMaterial 
+              color={voidstarPlanetData.surfaceColor}
+              transparent
+              opacity={0.4}
+              emissive={voidstarPlanetData.surfaceColor}
+              emissiveIntensity={0.2}
+              roughness={0.1}
+              metalness={0.8}
+              envMapIntensity={2.5}
+            />
+          </mesh>
+          
+          {/* Continental/land mass details */}
+          <mesh>
+            <sphereGeometry args={[planet.radius * 2.015, 64, 64]} />
+            <meshStandardMaterial 
+              color={voidstarPlanetData.surfaceColor}
+              transparent
+              opacity={0.6}
+              emissive={voidstarPlanetData.surfaceColor}
+              emissiveIntensity={0.15}
+              roughness={0.8}
+              metalness={0.2}
+              envMapIntensity={1.5}
+            />
+          </mesh>
+          
+          {/* Enhanced cloud layer with realistic patterns and variations */}
           <mesh ref={cloudsRef}>
-            <sphereGeometry args={[planet.radius * 2.08, 48, 48]} />
+            <sphereGeometry args={[planet.radius * 2.06, 96, 96]} />
             <meshStandardMaterial 
               color={voidstarPlanetData.cloudColor}
               transparent
-              opacity={0.75}
+              opacity={0.55}
               emissive={voidstarPlanetData.cloudColor}
-              emissiveIntensity={0.1}
-              roughness={1.0}
-              metalness={0.0}
-              envMapIntensity={0.5}
+              emissiveIntensity={0.2}
+              roughness={0.85}
+              metalness={0.15}
+              envMapIntensity={1.0}
             />
           </mesh>
           
-          {/* Atmosphere layer */}
+          {/* Additional cloud detail layer for more realistic patterns */}
+          <mesh>
+            <sphereGeometry args={[planet.radius * 2.08, 64, 64]} />
+            <meshStandardMaterial 
+              color={voidstarPlanetData.cloudColor}
+              transparent
+              opacity={0.3}
+              emissive={voidstarPlanetData.cloudColor}
+              emissiveIntensity={0.1}
+              roughness={0.95}
+              metalness={0.05}
+              envMapIntensity={0.6}
+            />
+          </mesh>
+          
+          {/* Thick atmospheric glow with scattering effect */}
           <mesh ref={atmosphereRef}>
-            <sphereGeometry args={[planet.radius * 2.15, 32, 32]} />
+            <sphereGeometry args={[planet.radius * 2.18, 48, 48]} />
             <meshStandardMaterial 
               color={voidstarPlanetData.atmosphereColor}
               transparent
-              opacity={0.6}
+              opacity={0.4}
               emissive={voidstarPlanetData.atmosphereColor}
-              emissiveIntensity={0.3}
+              emissiveIntensity={0.5}
+              side={2}
+              roughness={0.0}
+              metalness={0.0}
+              envMapIntensity={0.6}
+            />
+          </mesh>
+          
+          {/* Outer atmospheric halo for realistic glow */}
+          <mesh>
+            <sphereGeometry args={[planet.radius * 2.35, 32, 32]} />
+            <meshStandardMaterial 
+              color={voidstarPlanetData.atmosphereColor}
+              transparent
+              opacity={0.15}
+              emissive={voidstarPlanetData.atmosphereColor}
+              emissiveIntensity={0.8}
               side={2}
               roughness={0.0}
               metalness={0.0}
               envMapIntensity={0.3}
+            />
+          </mesh>
+        </>
+      ) : (
+        <>
+          {/* Regular planets also get enhanced realistic layers */}
+          {/* Enhanced surface details with terrain features */}
+          <mesh ref={surfaceRef}>
+            <sphereGeometry args={[planet.radius * 2.01, 96, 96]} />
+            <meshStandardMaterial 
+              color={planetColor}
+              transparent
+              opacity={0.85}
+              roughness={0.4}
+              metalness={0.6}
+              envMapIntensity={2.2}
+            />
+          </mesh>
+          
+          {/* Ocean/water layer for realistic surface */}
+          <mesh>
+            <sphereGeometry args={[planet.radius * 2.005, 72, 72]} />
+            <meshStandardMaterial 
+              color={adjustColorBrightness(planetColor, -20)}
+              transparent
+              opacity={0.5}
+              roughness={0.15}
+              metalness={0.7}
+              envMapIntensity={2.0}
+            />
+          </mesh>
+          
+          {/* Land mass/continental details */}
+          <mesh>
+            <sphereGeometry args={[planet.radius * 2.012, 48, 48]} />
+            <meshStandardMaterial 
+              color={adjustColorBrightness(planetColor, 15)}
+              transparent
+              opacity={0.4}
+              roughness={0.75}
+              metalness={0.25}
+              envMapIntensity={1.2}
+            />
+          </mesh>
+          
+          {/* Enhanced cloud layer with realistic patterns */}
+          <mesh ref={cloudsRef}>
+            <sphereGeometry args={[planet.radius * 2.05, 72, 72]} />
+            <meshStandardMaterial 
+              color="#FFFFFF"
+              transparent
+              opacity={0.35}
+              roughness={0.9}
+              metalness={0.1}
+              envMapIntensity={0.8}
+            />
+          </mesh>
+          
+          {/* Secondary cloud layer for depth and realism */}
+          <mesh>
+            <sphereGeometry args={[planet.radius * 2.07, 48, 48]} />
+            <meshStandardMaterial 
+              color="#F0F8FF"
+              transparent
+              opacity={0.2}
+              roughness={0.95}
+              metalness={0.05}
+              envMapIntensity={0.5}
+            />
+          </mesh>
+          
+          {/* Atmosphere */}
+          <mesh ref={atmosphereRef}>
+            <sphereGeometry args={[planet.radius * 2.12, 32, 32]} />
+            <meshStandardMaterial 
+              color={planetColor}
+              transparent
+              opacity={0.3}
+              emissive={planetColor}
+              emissiveIntensity={0.2}
+              side={2}
+              roughness={0.0}
+              metalness={0.0}
+              envMapIntensity={0.4}
+            />
+          </mesh>
+          
+          {/* Outer glow */}
+          <mesh>
+            <sphereGeometry args={[planet.radius * 2.25, 24, 24]} />
+            <meshStandardMaterial 
+              color={planetColor}
+              transparent
+              opacity={0.1}
+              emissive={planetColor}
+              emissiveIntensity={0.4}
+              side={2}
+              roughness={0.0}
+              metalness={0.0}
+              envMapIntensity={0.2}
             />
           </mesh>
         </>
