@@ -264,9 +264,9 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
         surfaceRef.current.position.y = 0
       }
 
-      // Check if planet is in lower-middle sector of orbit (bottom and horizontally centered)
-      // Conditions: deep negative Z AND small |X| relative to radius
-      const isBottom = z < -orbitRadius * 0.9
+      // Check if planet is in lower-middle sector of orbit on the opposite side (use positive Z)
+      // Conditions: deep positive Z AND small |X| relative to radius
+      const isBottom = z > orbitRadius * 0.9
       const isCenteredHorizontally = Math.abs(x) < orbitRadius * 0.25
       const isPlanetInLowerMiddle = isBottom && isCenteredHorizontally
       
@@ -557,8 +557,8 @@ function OrbitRings({ planets, starColor }: { planets: PlanetData[]; starColor: 
       {planets.map((planet, i) => {
         const base = ORBIT_BASE + i * ORBIT_SPACING
         const r = base + (i === 0 ? ORBIT_FIRST_EXTRA : 0)
-        // Lower-middle detection marker position: x ~ 0, z negative and deep (~ -0.9 * r)
-        const markerPos: [number, number, number] = [0, 0, -r * 0.9]
+        // Lower-middle detection marker position: x ~ 0, z positive and deep (~ +0.9 * r)
+        const markerPos: [number, number, number] = [0, 0, r * 0.9]
         return (
           <group key={`ring-${planet.id}`}>
             {/* Orbit ring */}
