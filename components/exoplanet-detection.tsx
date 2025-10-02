@@ -114,7 +114,7 @@ function Exoplanet({ planet }: { planet: ExoplanetData }) {
   const meshRef = useRef<THREE.Mesh>(null!)
   const atmosphereRef = useRef<THREE.Mesh>(null!)
   const [hovered, setHovered] = useState(false)
-  const { zoomToStarSystem } = useStarStore()
+  const { zoomToStarSystemFromVoidstar } = useStarStore()
   
   // Import the STAR_DATA from deep-space component
   const voidstarData = useMemo(() => ({
@@ -261,7 +261,7 @@ function Exoplanet({ planet }: { planet: ExoplanetData }) {
         onClick={() => {
           if (isVoidstar) {
             // When clicking on a voidstar planet, zoom to the Voidstar system
-            zoomToStarSystem(voidstarData)
+            zoomToStarSystemFromVoidstar(voidstarData)
           }
         }}
       >

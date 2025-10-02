@@ -43,9 +43,11 @@ interface StarStore {
   zoomedStar: StarData | null
   focusedObject: FocusTarget | null
   isFilterSpinning: boolean
+  navigationSource: "space" | "exoplanet-detection" | null
   setSelectedStar: (star: StarData | null) => void
   setHoveredStar: (star: StarData | null) => void
   zoomToStarSystem: (star: StarData) => void
+  zoomToStarSystemFromVoidstar: (star: StarData) => void
   focusOnObject: (target: FocusTarget) => void
   returnToStarSystem: () => void
   returnToSpace: () => void
@@ -60,6 +62,7 @@ export const useStarStore = create<StarStore>((set, get) => ({
   zoomedStar: null,
   focusedObject: null,
   isFilterSpinning: false,
+  navigationSource: null,
   setSelectedStar: (star) => set({ selectedStar: star }),
   setHoveredStar: (star) => set({ hoveredStar: star }),
   zoomToStarSystem: (star) =>
@@ -68,6 +71,15 @@ export const useStarStore = create<StarStore>((set, get) => ({
       currentView: "star-system",
       selectedStar: null,
       focusedObject: null,
+      navigationSource: "space",
+    }),
+  zoomToStarSystemFromVoidstar: (star) =>
+    set({
+      zoomedStar: star,
+      currentView: "star-system",
+      selectedStar: null,
+      focusedObject: null,
+      navigationSource: "exoplanet-detection",
     }),
   focusOnObject: (target) =>
     set({
@@ -87,6 +99,7 @@ export const useStarStore = create<StarStore>((set, get) => ({
       zoomedStar: null,
       selectedStar: null,
       focusedObject: null,
+      navigationSource: null,
     }),
   goToExoplanetDetection: () =>
     set({
@@ -94,6 +107,7 @@ export const useStarStore = create<StarStore>((set, get) => ({
       zoomedStar: null,
       selectedStar: null,
       focusedObject: null,
+      navigationSource: null,
     }),
   triggerFilterSpin: () => {
     set({ isFilterSpinning: true })

@@ -5,6 +5,7 @@ import * as THREE from "three"
 import { useStarStore, type StarData, type PlanetData } from "@/lib/star-store"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
+import { TransitChart } from "./transit-chart"
 
 // Helper function to generate random hex color
 function getRandomColor(): string {
@@ -919,7 +920,7 @@ export function StarSystem() {
 }
 
 export function StarSystemUI() {
-  const { zoomedStar, returnToSpace, currentView } = useStarStore()
+  const { zoomedStar, returnToSpace, currentView, navigationSource } = useStarStore()
 
   if (currentView !== "star-system" || !zoomedStar) return null
 
@@ -938,6 +939,16 @@ export function StarSystemUI() {
       </div>
 
       <StarSystemInfo star={zoomedStar} />
+
+      {/* Transit Chart - Only show when coming from exoplanet detection */}
+      {navigationSource === "exoplanet-detection" && (
+        <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-[60]">
+          <TransitChart 
+            planetName={zoomedStar.planetData?.[0]?.name || "Voidstar b"}
+            starName={zoomedStar.name}
+          />
+        </div>
+      )}
     </>
   )
 }
