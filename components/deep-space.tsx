@@ -731,23 +731,26 @@ function InteractiveStar({ star }: { star: StarData }) {
         </mesh>
       )}
 
-      {hovered && (
-        <Html position={[0, isSun ? 8 : 3, 0]} center distanceFactor={10} occlude={false}>
-          <div
-            className={`bg-black/90 text-white px-3 py-2 rounded-lg text-sm font-medium border border-white/30 backdrop-blur-sm ${isSun ? "text-yellow-300 border-yellow-400/40" : ""}`}
-          >
-            <div className="font-bold">{star.name}</div>
-            <div className="text-xs text-white/70 mt-1">{star.type}</div>
-            <div className="text-xs text-white/60">{star.temperature.toLocaleString()}K</div>
-            {isSun && <span className="text-xs text-yellow-400">☀️ Our Star</span>}
-            <div className="text-xs text-blue-400 mt-1">🪐 Click to explore</div>
+
+
+      {/* Always visible Sun label with fixed size */}
+      {isSun && (
+        <Html position={[0, -6, 0]} center distanceFactor={15} occlude={false}>
+          <div className="text-yellow-400 font-bold pointer-events-none select-none" 
+               style={{ 
+                 textShadow: '0 0 10px black, 4px 4px 0 black, -4px -4px 0 black, 4px -4px 0 black, -4px 4px 0 black',
+                 fontSize: '80px',
+                 fontFamily: 'monospace',
+                 fontWeight: 'bold'
+               }}>
+            Sun
           </div>
         </Html>
       )}
 
-      {hovered && (
+      {hovered && !isSun && (
         <Text
-          position={[0, isSun ? -10 : -4, 0]}
+          position={[0, -4, 0]}
           fontSize={0.6}
           color="white"
           anchorX="center"
