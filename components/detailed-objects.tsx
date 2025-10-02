@@ -2,7 +2,7 @@
 
 import { useRef, useMemo } from "react"
 import { useFrame } from "@react-three/fiber"
-import type * as THREE from "three"
+import * as THREE from "three"
 import { useStarStore, type StarData, type PlanetData } from "@/lib/star-store"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Home } from "lucide-react"
@@ -14,72 +14,199 @@ function DetailedPlanet({ planet, parentStar }: { planet: PlanetData; parentStar
   const cloudsRef = useRef<THREE.Mesh>(null!)
   const ringsRef = useRef<THREE.Mesh>(null!)
   const surfaceRef = useRef<THREE.Mesh>(null!)
+  const oceanRef = useRef<THREE.Mesh>(null!)
+  const landRef = useRef<THREE.Mesh>(null!)
 
+  // Enhanced realistic planet features
   const planetFeatures = useMemo(() => {
     switch (planet.type.toLowerCase()) {
       case "ice giant":
         return {
-          surface: "#1E3A8A", // Deep blue ice
-          atmosphere: "#3B82F6", // Bright blue atmosphere
-          clouds: "#E0F2FE", // Ice crystal clouds
+          surface: "#1E3A8A",
+          atmosphere: "#3B82F6",
+          clouds: "#E0F2FE",
+          ocean: "#1E40AF",
+          land: "#3730A3",
           hasRings: Math.random() > 0.6,
           surfaceRoughness: 0.1,
           metalness: 0.9,
           atmosphereThickness: 0.4,
           cloudDensity: 0.6,
           surfacePattern: "ice",
+          emissiveIntensity: 0.1,
+          envMapIntensity: 2.5
         }
       case "gas giant":
         return {
-          surface: "#D97706", // Jupiter-like orange/brown
-          atmosphere: "#F59E0B", // Golden atmosphere
-          clouds: "#FEF3C7", // Light golden clouds
+          surface: "#D97706",
+          atmosphere: "#F59E0B",
+          clouds: "#FEF3C7",
+          ocean: "#B45309",
+          land: "#92400E",
           hasRings: Math.random() > 0.4,
           surfaceRoughness: 0.3,
           metalness: 0.2,
           atmosphereThickness: 0.6,
           cloudDensity: 0.8,
           surfacePattern: "bands",
+          emissiveIntensity: 0.2,
+          envMapIntensity: 3.0
         }
       case "terrestrial":
       case "rocky":
         return {
-          surface: "#059669", // Earth-like green/blue
-          atmosphere: "#0EA5E9", // Blue atmosphere
-          clouds: "#FFFFFF", // White clouds
+          surface: "#FF7A3D", // Orange base to match reference
+          atmosphere: "#FFA24C",
+          clouds: "#FFFFFF",
+          ocean: "#FF6A2E",
+          land: "#FF9A47",
           hasRings: false,
-          surfaceRoughness: 0.8,
-          metalness: 0.1,
-          atmosphereThickness: 0.2,
-          cloudDensity: 0.4,
-          surfacePattern: "continents",
+          surfaceRoughness: 0.7,
+          metalness: 0.15,
+          atmosphereThickness: 0.18,
+          cloudDensity: 0.0, // clean, no clouds for stylized look
+          surfacePattern: "stylized_bands",
+          emissiveIntensity: 0.06,
+          envMapIntensity: 2.0
         }
       case "super earth":
         return {
-          surface: "#16A34A", // Rich green
-          atmosphere: "#2563EB", // Deep blue
-          clouds: "#F8FAFC", // Bright white
+          surface: "#16A34A",
+          atmosphere: "#2563EB",
+          clouds: "#F8FAFC",
+          ocean: "#1E40AF",
+          land: "#15803D",
           hasRings: false,
           surfaceRoughness: 0.6,
           metalness: 0.3,
           atmosphereThickness: 0.3,
           cloudDensity: 0.5,
           surfacePattern: "super_continents",
+          emissiveIntensity: 0.08,
+          envMapIntensity: 2.2
         }
       default:
         return {
           surface: "#A16207",
           atmosphere: "#0284C7",
           clouds: "#F1F5F9",
+          ocean: "#0C4A6E",
+          land: "#A16207",
           hasRings: false,
           surfaceRoughness: 0.5,
           metalness: 0.4,
           atmosphereThickness: 0.3,
           cloudDensity: 0.4,
           surfacePattern: "generic",
+          emissiveIntensity: 0.1,
+          envMapIntensity: 1.8
         }
     }
   }, [planet.type])
+
+  // Create procedural planet texture
+  const createPlanetTexture = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1024
+    canvas.height = 512
+    const ctx = canvas.getContext('2d')!
+    
+    // Stylized gradient and bands (no black speckles)
+    const g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
+    if (planetFeatures.surfacePattern === "stylized_bands") {
+      g.addColorStop(0.0, "#FF3B2E")
+      g.addColorStop(0.5, "#FF7A3D")
+      g.addColorStop(1.0, "#FFC247")
+    } else if (planetFeatures.surfacePattern === "bands") {
+      g.addColorStop(0.0, planetFeatures.surface)
+      g.addColorStop(0.5, planetFeatures.atmosphere)
+      g.addColorStop(1.0, planetFeatures.land)
+    } else if (planetFeatures.surfacePattern === "ice") {
+      g.addColorStop(0.0, "#1E3A8A")
+      g.addColorStop(0.5, "#3B82F6")
+      g.addColorStop(1.0, "#60A5FA")
+    } else {
+      g.addColorStop(0.0, planetFeatures.surface)
+      g.addColorStop(1.0, planetFeatures.atmosphere)
+    }
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    const drawBand = (baseY: number, amp: number, thickness: number, color: string, alpha = 0.35, freq = 3, phase = 0) => {
+      ctx.beginPath()
+      for (let x = 0; x <= canvas.width; x += 4) {
+        const y = baseY + Math.sin((x / canvas.width) * Math.PI * 2 * freq + phase) * amp
+        if (x === 0) ctx.moveTo(x, y - thickness / 2)
+        else ctx.lineTo(x, y - thickness / 2)
+      }
+      for (let x = canvas.width; x >= 0; x -= 4) {
+        const y = baseY + Math.sin((x / canvas.width) * Math.PI * 2 * freq + phase) * amp
+        ctx.lineTo(x, y + thickness / 2)
+      }
+      ctx.closePath()
+      ctx.fillStyle = color
+      ctx.globalAlpha = alpha
+      ctx.fill()
+      ctx.globalAlpha = 1
+    }
+
+    if (planetFeatures.surfacePattern === "stylized_bands") {
+      drawBand(canvas.height * 0.30, 18, 60, "#FF8A42", 0.45, 2.5, 0.0)
+      drawBand(canvas.height * 0.50, 22, 80, "#FFA24C", 0.40, 3.0, 0.8)
+      drawBand(canvas.height * 0.70, 16, 55, "#FF9A47", 0.35, 2.2, 1.6)
+      const drawSpot = (cx: number, cy: number, r: number, color: string, alpha = 0.35) => {
+        const rad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
+        rad.addColorStop(0, color)
+        rad.addColorStop(1, "rgba(255,255,255,0)")
+        ctx.fillStyle = rad
+        ctx.globalAlpha = alpha
+        ctx.beginPath()
+        ctx.arc(cx, cy, r, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.globalAlpha = 1
+      }
+      drawSpot(canvas.width * 0.28, canvas.height * 0.38, 48, "#FFB36B", 0.4)
+      drawSpot(canvas.width * 0.18, canvas.height * 0.72, 36, "#FFA85A", 0.35)
+    }
+
+    // No black speckles or random noise for stylized look
+
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.needsUpdate = true
+    return tex
+  }
+
+  // Create cloud texture
+  const createCloudTexture = () => {
+    const canvas = document.createElement('canvas')
+    canvas.width = 1024
+    canvas.height = 512
+    const ctx = canvas.getContext('2d')!
+    
+    // Transparent base
+    ctx.fillStyle = 'rgba(255, 255, 255, 0)'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    
+    // Create cloud patterns
+    for (let i = 0; i < 100; i++) {
+      const x = Math.random() * canvas.width
+      const y = Math.random() * canvas.height
+      const radius = Math.random() * 40 + 20
+      const opacity = Math.random() * 0.6 + 0.2
+      
+      const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius)
+      gradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`)
+      gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
+      
+      ctx.fillStyle = gradient
+      ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2)
+    }
+    
+    return new THREE.CanvasTexture(canvas)
+  }
+
+  const planetTexture = createPlanetTexture()
+  const cloudTexture = createCloudTexture()
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -89,6 +216,14 @@ function DetailedPlanet({ planet, parentStar }: { planet: PlanetData; parentStar
 
     if (surfaceRef.current) {
       surfaceRef.current.rotation.y += 0.003
+    }
+
+    if (oceanRef.current) {
+      oceanRef.current.rotation.y += 0.002
+    }
+
+    if (landRef.current) {
+      landRef.current.rotation.y += 0.004
     }
 
     if (atmosphereRef.current) {
@@ -115,12 +250,13 @@ function DetailedPlanet({ planet, parentStar }: { planet: PlanetData; parentStar
 
   return (
     <group position={[0, 0, 0]}>
+      {/* Enhanced starfield background */}
       <mesh position={[0, 0, -100]}>
         <sphereGeometry args={[200, 64, 64]} />
         <meshBasicMaterial color="#000033" transparent opacity={0.8} side={1} />
       </mesh>
 
-      {Array.from({ length: 500 }, (_, i) => {
+      {Array.from({ length: 800 }, (_, i) => {
         const radius = 150 + Math.random() * 200
         const theta = Math.random() * Math.PI * 2
         const phi = Math.acos(2 * Math.random() - 1)
@@ -129,56 +265,155 @@ function DetailedPlanet({ planet, parentStar }: { planet: PlanetData; parentStar
         const y = radius * Math.sin(phi) * Math.sin(theta)
         const z = radius * Math.cos(phi)
 
-        const size = Math.random() * 0.4 + 0.1
+        const size = Math.random() * 0.6 + 0.1
         const brightness = Math.sin(Date.now() * 0.001 + i) * 0.3 + 0.7
+        const starColor = Math.random() > 0.7 ? "#FFE4B5" : "#FFFFFF"
 
         return (
           <mesh key={i} position={[x, y, z]}>
             <sphereGeometry args={[size, 8, 8]} />
-            <meshBasicMaterial color="#FFFFFF" transparent opacity={brightness} />
+            <meshBasicMaterial color={starColor} transparent opacity={brightness} />
           </mesh>
         )
       })}
 
+      {/* Main planet core with realistic texture */}
       <mesh ref={meshRef}>
-        <sphereGeometry args={[8, 128, 128]} />
+        <sphereGeometry args={[8, 256, 256]} />
         <meshStandardMaterial
+          map={planetTexture}
           color={planetFeatures.surface}
           roughness={planetFeatures.surfaceRoughness}
           metalness={planetFeatures.metalness}
+          emissive={planetFeatures.surface}
+          emissiveIntensity={planetFeatures.emissiveIntensity}
+          envMapIntensity={planetFeatures.envMapIntensity}
         />
       </mesh>
 
-      <mesh ref={surfaceRef}>
-        <sphereGeometry args={[8.01, 64, 64]} />
-        <meshBasicMaterial color={planetFeatures.surface} transparent opacity={0.3} />
-      </mesh>
-
-      {planetFeatures.hasRings && (
-        <mesh ref={ringsRef} rotation={[Math.PI / 2 + 0.2, 0, 0]}>
-          <RingGeometry args={[10, 16, 128]} />
-          <meshBasicMaterial color="#D2B48C" transparent opacity={0.7} side={2} />
-        </mesh>
+      {/* Optional ocean/land layers */}
+      {planetFeatures.surfacePattern !== "stylized_bands" && (
+        <>
+          <mesh ref={oceanRef}>
+            <sphereGeometry args={[8.005, 128, 128]} />
+            <meshStandardMaterial
+              color={planetFeatures.ocean}
+              transparent
+              opacity={0.6}
+              roughness={0.1}
+              metalness={0.8}
+              envMapIntensity={2.5}
+            />
+          </mesh>
+          <mesh ref={landRef}>
+            <sphereGeometry args={[8.008, 96, 96]} />
+            <meshStandardMaterial
+              color={planetFeatures.land}
+              transparent
+              opacity={0.5}
+              roughness={0.7}
+              metalness={0.3}
+              envMapIntensity={1.8}
+            />
+          </mesh>
+        </>
       )}
 
+      {/* Enhanced surface details */}
+      <mesh ref={surfaceRef}>
+        <sphereGeometry args={[8.01, 128, 128]} />
+        <meshStandardMaterial
+          map={planetTexture}
+          color={planetFeatures.surface}
+          transparent
+          opacity={0.4}
+          roughness={planetFeatures.surfaceRoughness * 0.8}
+          metalness={planetFeatures.metalness * 1.2}
+          envMapIntensity={planetFeatures.envMapIntensity * 0.8}
+        />
+      </mesh>
+
+      {/* Enhanced realistic rings */}
+      {planetFeatures.hasRings && (
+        <group>
+          <mesh ref={ringsRef} rotation={[Math.PI / 2 + 0.2, 0, 0]}>
+            <RingGeometry args={[10, 16, 256]} />
+            <meshStandardMaterial
+              color="#D2B48C"
+              transparent
+              opacity={0.7}
+              side={2}
+              roughness={0.3}
+              metalness={0.6}
+              envMapIntensity={1.5}
+            />
+          </mesh>
+          {/* Inner ring detail */}
+          <mesh rotation={[Math.PI / 2 + 0.15, 0, 0]}>
+            <RingGeometry args={[9.5, 10.5, 128]} />
+            <meshStandardMaterial
+              color="#F5DEB3"
+              transparent
+              opacity={0.5}
+              side={2}
+              roughness={0.2}
+              metalness={0.8}
+              envMapIntensity={2.0}
+            />
+          </mesh>
+          {/* Outer ring detail */}
+          <mesh rotation={[Math.PI / 2 + 0.25, 0, 0]}>
+            <RingGeometry args={[15.5, 17, 128]} />
+            <meshStandardMaterial
+              color="#DEB887"
+              transparent
+              opacity={0.4}
+              side={2}
+              roughness={0.4}
+              metalness={0.5}
+              envMapIntensity={1.2}
+            />
+          </mesh>
+        </group>
+      )}
+
+      {/* Enhanced realistic atmosphere */}
       <mesh ref={atmosphereRef}>
-        <sphereGeometry args={[8.4, 64, 64]} />
-        <meshBasicMaterial
+        <sphereGeometry args={[8.4, 128, 128]} />
+        <meshStandardMaterial
           color={planetFeatures.atmosphere}
           transparent
           opacity={planetFeatures.atmosphereThickness}
           side={2}
+          roughness={0.0}
+          metalness={0.0}
+          emissive={planetFeatures.atmosphere}
+          emissiveIntensity={0.3}
+          envMapIntensity={1.0}
         />
       </mesh>
 
+      {/* Enhanced realistic clouds */}
       <mesh ref={cloudsRef}>
-        <sphereGeometry args={[8.2, 64, 64]} />
-        <meshBasicMaterial color={planetFeatures.clouds} transparent opacity={planetFeatures.cloudDensity} side={2} />
+        <sphereGeometry args={[8.2, 192, 192]} />
+        <meshStandardMaterial
+          map={cloudTexture}
+          color={planetFeatures.clouds}
+          transparent
+          opacity={planetFeatures.cloudDensity}
+          side={2}
+          roughness={0.95}
+          metalness={0.05}
+          envMapIntensity={0.8}
+        />
       </mesh>
 
-      <ambientLight intensity={0.2} color="#4A5568" />
-      <directionalLight position={[30, 20, 10]} intensity={2} color="#FFFFFF" castShadow />
-      <pointLight position={[-20, -10, 5]} intensity={0.5} color="#FFA500" />
+      {/* Enhanced lighting system */}
+      <ambientLight intensity={0.3} color="#4A5568" />
+      <directionalLight position={[30, 20, 10]} intensity={2.5} color="#FFFFFF" castShadow />
+      <pointLight position={[-20, -10, 5]} intensity={0.8} color="#FFA500" />
+      <pointLight position={[15, -25, 8]} intensity={0.4} color="#87CEEB" />
+      <hemisphereLight args={["#87CEEB", "#4A5568", 0.3]} />
     </group>
   )
 }
