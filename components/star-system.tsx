@@ -758,16 +758,7 @@ function CentralStar({ star }: { star: StarData }) {
             />
           </mesh>
 
-          {/* Medium glow ring */}
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[2.2, 2.8, 32]} />
-            <meshBasicMaterial
-              color="#FF0000"
-              transparent
-              opacity={0.25}
-              side={2}
-            />
-          </mesh>
+          
 
           {/* Small inner glow */}
           <mesh>
