@@ -419,9 +419,6 @@ function DetailedPlanet({ planet, parentStar }: { planet: PlanetData; parentStar
 
 function DetailedStar({ star }: { star: StarData }) {
   const meshRef = useRef<THREE.Mesh>(null!)
-  const coronaRef = useRef<THREE.Mesh>(null!)
-  const flareRef = useRef<THREE.Mesh>(null!)
-  const prominenceRefs = useRef<THREE.Mesh[]>([])
 
   const starFeatures = useMemo(() => {
     if (star.name === "Sun") {
@@ -479,34 +476,6 @@ function DetailedStar({ star }: { star: StarData }) {
       meshRef.current.rotation.y += 0.002 * starFeatures.activity
     }
 
-    if (coronaRef.current) {
-      const coronaActivity = Math.sin(state.clock.elapsedTime * 1.5 * starFeatures.activity) * 0.3 + 0.8
-      coronaRef.current.scale.setScalar(coronaActivity)
-      coronaRef.current.rotation.z += 0.003
-
-      if (coronaRef.current.material) {
-        const brightness = Math.sin(state.clock.elapsedTime * 2) * 0.2 + 0.7
-        coronaRef.current.material.opacity = brightness * 0.6
-      }
-    }
-
-    if (flareRef.current) {
-      const flareIntensity = Math.sin(state.clock.elapsedTime * 3 * starFeatures.activity) * 0.4 + 0.6
-      if (flareRef.current.material) {
-        flareRef.current.material.opacity = 0.3 * flareIntensity
-      }
-      flareRef.current.rotation.x += 0.001
-      flareRef.current.rotation.y += 0.002
-    }
-
-    prominenceRefs.current.forEach((prominence, i) => {
-      if (prominence) {
-        const offset = i * 0.5
-        const activity = Math.sin(state.clock.elapsedTime * 2 + offset) * 0.2 + 0.8
-        prominence.scale.setScalar(activity)
-        prominence.rotation.z += 0.001 * (i + 1)
-      }
-    })
   })
 
   return (
@@ -530,38 +499,12 @@ function DetailedStar({ star }: { star: StarData }) {
         )
       })}
 
-      {Array.from({ length: 6 }, (_, i) => {
-        const angle = (i / 6) * Math.PI * 2
-        const x = Math.cos(angle) * (starFeatures.size + 2)
-        const y = Math.sin(angle) * (starFeatures.size + 2)
-        return (
-          <mesh
-            key={i}
-            ref={(el) => {
-              if (el) prominenceRefs.current[i] = el
-            }}
-            position={[x, y, 0]}
-          >
-            <sphereGeometry args={[1.5, 16, 16]} />
-            <meshBasicMaterial color={starFeatures.flare} transparent opacity={0.4} />
-          </mesh>
-        )
-      })}
 
       <mesh ref={meshRef}>
         <sphereGeometry args={[starFeatures.size, 128, 128]} />
         <meshBasicMaterial color={starFeatures.core} />
       </mesh>
 
-      <mesh ref={coronaRef}>
-        <sphereGeometry args={[starFeatures.size + 2, 64, 64]} />
-        <meshBasicMaterial color={starFeatures.corona} transparent opacity={0.6} side={2} />
-      </mesh>
-
-      <mesh ref={flareRef}>
-        <sphereGeometry args={[starFeatures.size + 6, 32, 32]} />
-        <meshBasicMaterial color={starFeatures.flare} transparent opacity={0.2} side={2} />
-      </mesh>
 
       <pointLight position={[0, 0, 0]} intensity={starFeatures.activity * 2} color={starFeatures.core} distance={100} />
     </group>

@@ -517,9 +517,6 @@ function OrbitRings({ planets, starColor }: { planets: PlanetData[]; starColor: 
 
 function CentralStar({ star }: { star: StarData }) {
   const meshRef = useRef<THREE.Mesh>(null!)
-  const glowRef = useRef<THREE.Mesh>(null!)
-  const coronaRef = useRef<THREE.Mesh>(null!)
-  const flareRef = useRef<THREE.Mesh>(null!)
   const { focusOnObject } = useStarStore()
   const [hovered, setHovered] = useState(false)
 
@@ -590,32 +587,6 @@ function CentralStar({ star }: { star: StarData }) {
       meshRef.current.rotation.y += 0.002 * starVisuals.activity
     }
 
-    if (glowRef.current) {
-      const glowPulse = Math.sin(state.clock.elapsedTime * 2) * 0.3 + 0.8
-      const material = glowRef.current.material as THREE.MeshBasicMaterial
-      if (material && "opacity" in material) {
-        material.opacity = 0.4 * glowPulse * starVisuals.activity
-      }
-    }
-
-    if (coronaRef.current) {
-      const coronaPulse = Math.sin(state.clock.elapsedTime * 1.8) * 0.2 + 0.7
-      const coronaMaterial = coronaRef.current.material as THREE.MeshBasicMaterial
-      if (coronaMaterial && "opacity" in coronaMaterial) {
-        coronaMaterial.opacity = 0.2 * coronaPulse * starVisuals.activity
-      }
-      coronaRef.current.rotation.z += 0.003 * starVisuals.activity
-    }
-
-    if (flareRef.current) {
-      const flareActivity = Math.sin(state.clock.elapsedTime * 3 * starVisuals.activity) * 0.4 + 0.6
-      if (flareRef.current.material) {
-        const flareMaterial = flareRef.current.material as THREE.MeshBasicMaterial
-        flareMaterial.opacity = 0.15 * flareActivity
-      }
-      flareRef.current.rotation.x += 0.001
-      flareRef.current.rotation.y += 0.002
-    }
   })
 
   const handleStarClick = () => {
@@ -648,24 +619,6 @@ function CentralStar({ star }: { star: StarData }) {
           roughness={0.2}
           metalness={0.0}
         />
-      </mesh>
-
-      {/* Enhanced stellar atmosphere */}
-      <mesh ref={glowRef}>
-        <sphereGeometry args={[starSize * 1.3, 32, 32]} />
-        <meshBasicMaterial color={starVisuals.corona} transparent opacity={0.4} />
-      </mesh>
-
-      {/* Stellar corona with realistic dynamics */}
-      <mesh ref={coronaRef}>
-        <sphereGeometry args={[starSize * 2, 32, 32]} />
-        <meshBasicMaterial color={starVisuals.corona} transparent opacity={0.2} side={2} />
-      </mesh>
-
-      {/* Solar flares and stellar wind */}
-      <mesh ref={flareRef}>
-        <sphereGeometry args={[starSize * 3, 16, 16]} />
-        <meshBasicMaterial color={starVisuals.flare} transparent opacity={0.1} side={2} />
       </mesh>
 
       {/* Enhanced lighting for realistic illumination */}
