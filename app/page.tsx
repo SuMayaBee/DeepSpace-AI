@@ -9,6 +9,7 @@ import { FocusedObject, FocusedObjectUI } from "@/components/detailed-objects"
 import { CameraController } from "@/components/camera-controller"
 import { StarInfoPanel } from "@/components/star-info-panel"
 import { SpaceUI } from "@/components/space-ui"
+import { DynamicLighting } from "@/components/dynamic-lighting"
 import { useStarStore } from "@/lib/star-store"
 
 export default function HomePage() {
@@ -101,31 +102,34 @@ export default function HomePage() {
         frameloop="demand"
       >
         <Suspense fallback={null}>
-          <ambientLight intensity={0.1} />
-          <pointLight position={[100, 100, 100]} intensity={0.3} />
+          {/* Enhanced ambient lighting for space atmosphere */}
+          <ambientLight intensity={0.15} color="#1a1a2e" />
+          
+          {/* Dynamic lighting system that responds to planet positions */}
+          <DynamicLighting />
 
           <CameraController />
 
           {currentView === "space" && (
             <>
-              <Environment preset="night" />
-              <Stars radius={300} depth={200} count={3000} factor={6} saturation={0.8} fade={true} />
+              <Environment preset="sunset" background={false} />
+              <Stars radius={400} depth={300} count={5000} factor={8} saturation={0.9} fade={true} />
               <DeepSpace />
             </>
           )}
 
           {currentView === "star-system" && (
             <>
-              <Environment preset="night" />
-              <Stars radius={100} depth={50} count={1000} factor={3} saturation={0.6} fade={true} />
+              <Environment preset="city" background={false} />
+              <Stars radius={150} depth={80} count={2000} factor={5} saturation={0.8} fade={true} />
               <StarSystem />
             </>
           )}
 
           {currentView === "focused-object" && (
             <>
-              <Environment preset="night" />
-              <Stars radius={200} depth={100} count={2000} factor={4} saturation={0.7} fade={true} />
+              <Environment preset="dawn" background={false} />
+              <Stars radius={250} depth={150} count={3000} factor={6} saturation={0.85} fade={true} />
               <FocusedObject />
             </>
           )}
