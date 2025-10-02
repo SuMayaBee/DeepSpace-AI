@@ -6,6 +6,7 @@ import { Html } from "@react-three/drei"
 import * as THREE from "three"
 import { useStarStore } from "@/lib/star-store"
 import { useMissionFilter } from "./exoplanet-detection-ui"
+import { generatePlanetColorScheme } from "./star-system"
 
 interface ExoplanetData {
   id: string
@@ -46,6 +47,8 @@ const generateExoplanets = (): ExoplanetData[] => {
   const tessCandidates = 7703
   
   return Array.from({ length: 25 }, (_, index) => {
+    // Make some planets voidstar planets (every 5th planet)
+    const isVoidstar = index % 5 === 0
     const planetType = exoplanetTypes[Math.floor(Math.random() * exoplanetTypes.length)]
     const distance = 0.5 + (index * 0.3) + Math.random() * 0.2
     const discoveryYear = 1995 + Math.floor(Math.random() * 28) // 1995-2023
@@ -88,7 +91,7 @@ const generateExoplanets = (): ExoplanetData[] => {
 
     return {
       id: `exoplanet-${index}`,
-      name: `Exoplanet ${String.fromCharCode(65 + index)}`,
+      name: isVoidstar ? `Voidstar ${String.fromCharCode(65 + index)}` : `Exoplanet ${String.fromCharCode(65 + index)}`,
       type: planetType.type,
       radius: Math.random() * 0.4 + 0.1,
       distance,
@@ -109,23 +112,110 @@ const generateExoplanets = (): ExoplanetData[] => {
 
 function Exoplanet({ planet }: { planet: ExoplanetData }) {
   const meshRef = useRef<THREE.Mesh>(null!)
+  const atmosphereRef = useRef<THREE.Mesh>(null!)
   const [hovered, setHovered] = useState(false)
+  const { zoomToStarSystem } = useStarStore()
+  
+  // Import the STAR_DATA from deep-space component
+  const voidstarData = useMemo(() => ({
+    id: "26",
+    name: "Voidstar",
+    type: "Electric Cyan Giant",
+    temperature: 15000,
+    mass: 8.5,
+    radius: 12.3,
+    distance: 420,
+    planets: ["Voidstar b", "Voidstar c"],
+    constellation: "Mysticus",
+    magnitude: 1.2,
+    color: "#00FFFF",
+    position: [-45, 15, -30],
+    planetData: [
+      {
+        id: "26-planet-0",
+        name: "Voidstar b",
+        type: "Rocky",
+        radius: 0.15,
+        distance: 0.8,
+        color: "#0C4A6E",
+        orbitSpeed: 0.56,
+        temperature: 18750,
+        mass: 0.8
+      },
+      {
+        id: "26-planet-1",
+        name: "Voidstar c",
+        type: "Gas Giant",
+        radius: 0.25,
+        distance: 1.6,
+        color: "#7C2D12",
+        orbitSpeed: 0.4,
+        temperature: 13250,
+        mass: 1.2
+      }
+    ]
+  }), [])
 
-  // Determine color based on AI classification
-  const getAIColor = (confidence: "exoplanet" | "near-exoplanet" | "not-exoplanet") => {
-    switch (confidence) {
-      case "exoplanet":
-        return "#00FF00" // Bright green for confirmed exoplanet (95%+)
-      case "near-exoplanet":
-        return "#8000FF" // Purple for near exoplanet (85-94%)
-      case "not-exoplanet":
-        return "#FFFFFF" // White for not exoplanet (<85%)
-      default:
-        return "#FFFFFF"
+  // Check if this is a voidstar planet
+  const isVoidstar = planet.name.toLowerCase().includes("voidstar")
+  
+  // Generate color scheme - use voidstar specific colors if it's a voidstar planet
+  const planetColorScheme = useMemo(() => {
+    if (isVoidstar) {
+      // For Voidstar planets, use the predefined planet types
+      const planetTypes = [
+        { 
+          baseColor: "#0C4A6E", // Deep ocean blue
+          surfaceColor: "#075985", // Darker blue
+          atmosphereColor: "#0EA5E9", // Sky blue
+          emissiveColor: "#0284C7", // Medium blue
+          cloudColor: "#E0F2FE", // Light blue
+          name: "voidstar"
+        },
+        { 
+          baseColor: "#7C2D12", // Deep orange
+          surfaceColor: "#9A3412", // Darker orange
+          atmosphereColor: "#EA580C", // Bright orange
+          emissiveColor: "#DC2626", // Red-orange
+          cloudColor: "#FED7AA", // Light orange
+          name: "voidstar"
+        },
+        { 
+          baseColor: "#581C87", // Deep purple
+          surfaceColor: "#6B21A8", // Darker purple
+          atmosphereColor: "#A855F7", // Bright purple
+          emissiveColor: "#9333EA", // Medium purple
+          cloudColor: "#F3E8FF", // Light purple
+          name: "voidstar"
+        }
+      ]
+      return planetTypes[parseInt(planet.id.split('-')[1]) % planetTypes.length]
+    } else {
+      // For regular exoplanets, use AI classification colors
+      const getAIColor = (confidence: "exoplanet" | "near-exoplanet" | "not-exoplanet") => {
+        switch (confidence) {
+          case "exoplanet":
+            return "#00FF00" // Bright green for confirmed exoplanet (95%+)
+          case "near-exoplanet":
+            return "#8000FF" // Purple for near exoplanet (85-94%)
+          case "not-exoplanet":
+            return "#FFFFFF" // White for not exoplanet (<85%)
+          default:
+            return "#FFFFFF"
+        }
+      }
+      
+      const aiColor = getAIColor(planet.aiConfidence)
+      return {
+        baseColor: aiColor,
+        surfaceColor: aiColor,
+        atmosphereColor: aiColor,
+        emissiveColor: aiColor,
+        cloudColor: aiColor,
+        name: "regular"
+      }
     }
-  }
-
-  const aiColor = getAIColor(planet.aiConfidence)
+  }, [isVoidstar, planet.id, planet.aiConfidence, planet.name])
 
   useFrame((state) => {
     if (meshRef.current) {
@@ -140,11 +230,23 @@ function Exoplanet({ planet }: { planet: ExoplanetData }) {
         meshRef.current.scale.setScalar(1)
       }
     }
+
+    // Enhanced atmospheric scattering and glow animations
+    if (isVoidstar && atmosphereRef.current) {
+      const atmospherePulse = Math.sin(state.clock.elapsedTime * 1.5) * 0.15 + 0.85
+      const material = atmosphereRef.current.material as THREE.MeshStandardMaterial
+      material.opacity = atmospherePulse * 0.4
+      
+      // Subtle atmospheric color shift
+      const hueShift = Math.sin(state.clock.elapsedTime * 0.8) * 0.1
+      material.emissive = new THREE.Color(planetColorScheme.atmosphereColor)
+      material.emissiveIntensity = 0.5 + hueShift * 0.2
+    }
   })
 
   return (
     <>
-      {/* Main planet - now in white color */}
+      {/* Main planet with enhanced visual effects */}
       <mesh
         ref={meshRef}
         position={planet.position}
@@ -156,16 +258,135 @@ function Exoplanet({ planet }: { planet: ExoplanetData }) {
           setHovered(false)
           document.body.style.cursor = "default"
         }}
+        onClick={() => {
+          if (isVoidstar) {
+            // When clicking on a voidstar planet, zoom to the Voidstar system
+            zoomToStarSystem(voidstarData)
+          }
+        }}
       >
         <sphereGeometry args={[planet.radius * 2, 32, 32]} />
         <meshStandardMaterial 
-          color={aiColor} 
-          roughness={0.6}
-          metalness={0.4}
-          emissive={aiColor}
-          emissiveIntensity={0.3}
+          color={planetColorScheme.baseColor}
+          emissive={planetColorScheme.emissiveColor}
+          emissiveIntensity={isVoidstar ? 0.8 : 0.3}
+          roughness={isVoidstar ? 0.75 : 0.6}
+          metalness={isVoidstar ? 0.25 : 0.4}
+          envMapIntensity={isVoidstar ? 1.8 : 2.0}
         />
       </mesh>
+
+      {/* Surface layer with enhanced details */}
+      <mesh position={planet.position}>
+        <sphereGeometry args={[planet.radius * 2.005, 64, 64]} />
+        <meshStandardMaterial 
+          color={planetColorScheme.surfaceColor}
+          transparent
+          opacity={isVoidstar ? 0.9 : 0.85}
+          emissive={planetColorScheme.surfaceColor}
+          emissiveIntensity={isVoidstar ? 0.5 : 0.2}
+          roughness={isVoidstar ? 0.5 : 0.4}
+          metalness={isVoidstar ? 0.7 : 0.6}
+          envMapIntensity={isVoidstar ? 2.5 : 2.2}
+        />
+      </mesh>
+      
+      {/* Additional surface detail layer */}
+      <mesh position={planet.position}>
+        <sphereGeometry args={[planet.radius * 2.01, 64, 64]} />
+        <meshStandardMaterial 
+          color={planetColorScheme.surfaceColor}
+          transparent
+          opacity={isVoidstar ? 0.4 : 0.5}
+          emissive={planetColorScheme.surfaceColor}
+          emissiveIntensity={isVoidstar ? 0.2 : 0.1}
+          roughness={isVoidstar ? 0.1 : 0.15}
+          metalness={isVoidstar ? 0.8 : 0.7}
+          envMapIntensity={isVoidstar ? 2.5 : 2.0}
+        />
+      </mesh>
+      
+      {/* Continental/land mass details (voidstar only) */}
+      {isVoidstar && (
+        <mesh position={planet.position}>
+          <sphereGeometry args={[planet.radius * 2.015, 64, 64]} />
+          <meshStandardMaterial 
+            color={planetColorScheme.surfaceColor}
+            transparent
+            opacity={0.6}
+            roughness={0.8}
+            metalness={0.3}
+            envMapIntensity={1.5}
+          />
+        </mesh>
+      )}
+      
+      {/* Cloud layer */}
+      <mesh position={planet.position}>
+        <sphereGeometry args={[planet.radius * 2.05, 64, 64]} />
+        <meshStandardMaterial 
+          color={planetColorScheme.cloudColor}
+          transparent
+          opacity={isVoidstar ? 0.55 : 0.4}
+          emissive={planetColorScheme.cloudColor}
+          emissiveIntensity={isVoidstar ? 0.2 : 0.1}
+          roughness={isVoidstar ? 0.85 : 0.8}
+          metalness={isVoidstar ? 0.15 : 0.1}
+          envMapIntensity={isVoidstar ? 1.0 : 0.8}
+        />
+      </mesh>
+      
+      {/* Additional cloud detail layer (voidstar only) */}
+      {isVoidstar && (
+        <mesh position={planet.position}>
+          <sphereGeometry args={[planet.radius * 2.08, 64, 64]} />
+          <meshStandardMaterial 
+            color={planetColorScheme.cloudColor}
+            transparent
+            opacity={0.3}
+            roughness={0.9}
+            metalness={0.05}
+            envMapIntensity={0.8}
+          />
+        </mesh>
+      )}
+      
+      {/* Atmosphere layer */}
+      <mesh 
+        ref={atmosphereRef}
+        position={planet.position}
+      >
+        <sphereGeometry args={[planet.radius * 2.2, 32, 32]} />
+        <meshStandardMaterial 
+          color={planetColorScheme.atmosphereColor}
+          transparent
+          opacity={isVoidstar ? 0.4 : 0.3}
+          emissive={planetColorScheme.atmosphereColor}
+          emissiveIntensity={isVoidstar ? 0.5 : 0.2}
+          side={2}
+          roughness={0.0}
+          metalness={0.0}
+          envMapIntensity={isVoidstar ? 0.6 : 0.4}
+        />
+      </mesh>
+      
+      {/* Outer atmospheric halo for realistic glow (voidstar only) */}
+      {isVoidstar && (
+        <mesh position={planet.position}>
+          <sphereGeometry args={[planet.radius * 2.35, 32, 32]} />
+          <meshStandardMaterial 
+            color={planetColorScheme.atmosphereColor}
+            transparent
+            opacity={0.15}
+            emissive={planetColorScheme.atmosphereColor}
+            emissiveIntensity={0.3}
+            side={2}
+            roughness={0.0}
+            metalness={0.0}
+            envMapIntensity={0.4}
+          />
+        </mesh>
+      )}
 
       {/* Hover info */}
       {hovered && (
@@ -196,6 +417,11 @@ function Exoplanet({ planet }: { planet: ExoplanetData }) {
               Discovered: {planet.discoveryYear}
             </div>
             {planet.temperature && <div className="text-xs text-white/70">~{Math.round(planet.temperature)}K</div>}
+            {isVoidstar && (
+              <div className="text-xs text-cyan-400 font-semibold mt-2">
+                Click to explore Voidstar system
+              </div>
+            )}
           </div>
         </Html>
       )}
