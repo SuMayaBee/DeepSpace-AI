@@ -44,6 +44,8 @@ interface StarStore {
   navigationSource: "space" | "exoplanet-detection" | null
   chartPosition: "middle" | "lower" // Track chart position
   planetInCenter: boolean // Track if any planet is in center of view
+  // Track which planets are currently in the lower-middle sector
+  lowerMiddlePlanetIds: string[]
   isFilterSpinning: boolean
   setHoveredStar: (star: StarData | null) => void
   setNavigationSource: (source: "space" | "exoplanet-detection" | null) => void
@@ -51,6 +53,9 @@ interface StarStore {
   zoomToStarSystemFromVoidstar: (starData: StarData) => void
   setChartPosition: (position: "middle" | "lower") => void
   setPlanetInCenter: (inCenter: boolean) => void
+  // Multi-planet aware enter/leave for lower-middle detection
+  enterLowerMiddle: (planetId: string) => void
+  leaveLowerMiddle: (planetId: string) => void
   focusOnObject: (target: FocusTarget) => void
   returnToStarSystem: () => void
   returnToSpace: () => void
@@ -67,6 +72,7 @@ export const useStarStore = create<StarStore>((set, get) => ({
   navigationSource: null,
   chartPosition: "middle",
   planetInCenter: false,
+  lowerMiddlePlanetIds: [],
   isFilterSpinning: false,
   
   setHoveredStar: (star) => set({ hoveredStar: star }),
@@ -77,7 +83,8 @@ export const useStarStore = create<StarStore>((set, get) => ({
       zoomedStar: star,
       navigationSource: "space",
       chartPosition: "middle",
-      planetInCenter: false
+      planetInCenter: false,
+      lowerMiddlePlanetIds: []
     })
   },
   zoomToStarSystemFromVoidstar: (starData) => {
@@ -86,11 +93,24 @@ export const useStarStore = create<StarStore>((set, get) => ({
       zoomedStar: starData,
       navigationSource: "exoplanet-detection",
       chartPosition: "middle",
-      planetInCenter: false
+      planetInCenter: false,
+      lowerMiddlePlanetIds: []
     })
   },
   setChartPosition: (position) => set({ chartPosition: position }),
   setPlanetInCenter: (inCenter) => set({ planetInCenter: inCenter }),
+  enterLowerMiddle: (planetId) =>
+    set((state) => {
+      if (state.lowerMiddlePlanetIds.includes(planetId)) return state
+      const updated = [...state.lowerMiddlePlanetIds, planetId]
+      return { lowerMiddlePlanetIds: updated, planetInCenter: updated.length > 0 }
+    }),
+  leaveLowerMiddle: (planetId) =>
+    set((state) => {
+      if (!state.lowerMiddlePlanetIds.includes(planetId)) return state
+      const updated = state.lowerMiddlePlanetIds.filter((id) => id !== planetId)
+      return { lowerMiddlePlanetIds: updated, planetInCenter: updated.length > 0 }
+    }),
   focusOnObject: (target) =>
     set({
       focusedObject: target,

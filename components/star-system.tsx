@@ -133,7 +133,7 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
   const surfaceRef = useRef<THREE.Mesh>(null!)
   const [hovered, setHovered] = useState(false)
   const [angle, setAngle] = useState(Math.random() * Math.PI * 2)
-  const { focusOnObject, zoomedStar, setChartPosition, setPlanetInCenter } = useStarStore()
+  const { focusOnObject, zoomedStar, enterLowerMiddle, leaveLowerMiddle } = useStarStore()
 
   const isVoidstar = zoomedStar?.name === "Voidstar"
   
@@ -271,10 +271,10 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
       const isPlanetInLowerMiddle = isBottom && isCenteredHorizontally
       
       if (isPlanetInLowerMiddle) {
-        setPlanetInCenter(true)
+        enterLowerMiddle(planet.id)
       } else {
         // Immediately clear when this planet is out of the lower-middle sector
-        setPlanetInCenter(false)
+        leaveLowerMiddle(planet.id)
       }
 
       // Realistic planet rotation with different speeds for layers
@@ -557,11 +557,22 @@ function OrbitRings({ planets, starColor }: { planets: PlanetData[]; starColor: 
       {planets.map((planet, i) => {
         const base = ORBIT_BASE + i * ORBIT_SPACING
         const r = base + (i === 0 ? ORBIT_FIRST_EXTRA : 0)
+        // Lower-middle detection marker position: x ~ 0, z negative and deep (~ -0.9 * r)
+        const markerPos: [number, number, number] = [0, 0, -r * 0.9]
         return (
-          <mesh key={`ring-${planet.id}`} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[r - 0.05, r + 0.05, 64]} />
-            <meshBasicMaterial color="#FFFFFF" transparent opacity={0.6} side={2} />
-          </mesh>
+          <group key={`ring-${planet.id}`}>
+            {/* Orbit ring */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]}>
+              <ringGeometry args={[r - 0.05, r + 0.05, 64]} />
+              <meshBasicMaterial color="#FFFFFF" transparent opacity={0.6} side={2} />
+            </mesh>
+
+            {/* Lower-middle detection marker */}
+            <mesh position={markerPos}>
+              <sphereGeometry args={[0.06, 16, 16]} />
+              <meshBasicMaterial color="#22D3EE" transparent opacity={0.9} />
+            </mesh>
+          </group>
         )
       })}
     </group>
