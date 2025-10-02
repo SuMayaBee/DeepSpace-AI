@@ -214,8 +214,8 @@ export function ExoplanetDetectionUI() {
       <div className="fixed top-20 left-4 z-[60]">
         <Card className="bg-black/50 border-white/20 backdrop-blur-sm transition-all duration-500 hover:bg-black/60 w-64">
           <CardHeader className="pb-2">
-            <CardTitle className="text-white text-sm flex items-center gap-2">
-              <Zap className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <CardTitle className="text-white text-lg md:text-xl flex items-center gap-2 font-semibold">
+              <Zap className="w-5 h-5 text-cyan-400 animate-pulse" />
               AI Model Training Parameters
             </CardTitle>
           </CardHeader>
