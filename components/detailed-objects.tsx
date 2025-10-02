@@ -19,90 +19,23 @@ function DetailedPlanet({ planet, parentStar }: { planet: PlanetData; parentStar
 
   // Enhanced realistic planet features
   const planetFeatures = useMemo(() => {
-    switch (planet.type.toLowerCase()) {
-      case "ice giant":
-        return {
-          surface: "#1E3A8A",
-          atmosphere: "#3B82F6",
-          clouds: "#E0F2FE",
-          ocean: "#1E40AF",
-          land: "#3730A3",
-          hasRings: Math.random() > 0.6,
-          surfaceRoughness: 0.1,
-          metalness: 0.9,
-          atmosphereThickness: 0.4,
-          cloudDensity: 0.6,
-          surfacePattern: "ice",
-          emissiveIntensity: 0.1,
-          envMapIntensity: 2.5
-        }
-      case "gas giant":
-        return {
-          surface: "#D97706",
-          atmosphere: "#F59E0B",
-          clouds: "#FEF3C7",
-          ocean: "#B45309",
-          land: "#92400E",
-          hasRings: Math.random() > 0.4,
-          surfaceRoughness: 0.3,
-          metalness: 0.2,
-          atmosphereThickness: 0.6,
-          cloudDensity: 0.8,
-          surfacePattern: "bands",
-          emissiveIntensity: 0.2,
-          envMapIntensity: 3.0
-        }
-      case "terrestrial":
-      case "rocky":
-        return {
-          surface: "#FF7A3D", // Orange base to match reference
-          atmosphere: "#FFA24C",
-          clouds: "#FFFFFF",
-          ocean: "#FF6A2E",
-          land: "#FF9A47",
-          hasRings: false,
-          surfaceRoughness: 0.7,
-          metalness: 0.15,
-          atmosphereThickness: 0.18,
-          cloudDensity: 0.0, // clean, no clouds for stylized look
-          surfacePattern: "stylized_bands",
-          emissiveIntensity: 0.06,
-          envMapIntensity: 2.0
-        }
-      case "super earth":
-        return {
-          surface: "#16A34A",
-          atmosphere: "#2563EB",
-          clouds: "#F8FAFC",
-          ocean: "#1E40AF",
-          land: "#15803D",
-          hasRings: false,
-          surfaceRoughness: 0.6,
-          metalness: 0.3,
-          atmosphereThickness: 0.3,
-          cloudDensity: 0.5,
-          surfacePattern: "super_continents",
-          emissiveIntensity: 0.08,
-          envMapIntensity: 2.2
-        }
-      default:
-        return {
-          surface: "#A16207",
-          atmosphere: "#0284C7",
-          clouds: "#F1F5F9",
-          ocean: "#0C4A6E",
-          land: "#A16207",
-          hasRings: false,
-          surfaceRoughness: 0.5,
-          metalness: 0.4,
-          atmosphereThickness: 0.3,
-          cloudDensity: 0.4,
-          surfacePattern: "generic",
-          emissiveIntensity: 0.1,
-          envMapIntensity: 1.8
-        }
+    // Force all planets to share the same stylized rocky/terrestrial profile (like Venus/Mercury)
+    return {
+      surface: "#FF7A3D",
+      atmosphere: "#FFA24C",
+      clouds: "#FFFFFF",
+      ocean: "#FF6A2E",
+      land: "#FF9A47",
+      hasRings: false,
+      surfaceRoughness: 0.7,
+      metalness: 0.15,
+      atmosphereThickness: 0.18,
+      cloudDensity: 0.0,
+      surfacePattern: "stylized_bands",
+      emissiveIntensity: 0.06,
+      envMapIntensity: 2.0
     }
-  }, [planet.type])
+  }, [])
 
   // Create procedural planet texture
   const createPlanetTexture = () => {
