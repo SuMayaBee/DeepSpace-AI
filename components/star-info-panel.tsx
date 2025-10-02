@@ -13,7 +13,7 @@ export function StarInfoPanel() {
 
   return (
     <div className="fixed top-4 right-4 w-80 z-10">
-      <Card className="!bg-cyan-900/20 !border-cyan-400/30 text-white backdrop-blur-sm">
+      <Card className="bg-cyan-900/20 border-cyan-400/30 text-white backdrop-blur-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-bold flex items-center gap-2">
