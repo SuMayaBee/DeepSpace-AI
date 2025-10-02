@@ -5,6 +5,7 @@ import * as THREE from "three"
 import { useStarStore, type StarData, type PlanetData } from "@/lib/star-store"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
+import { TransitChart } from "./transit-chart"
 
 // Helper function to generate random hex color
 function getRandomColor(): string {
@@ -132,7 +133,7 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
   const surfaceRef = useRef<THREE.Mesh>(null!)
   const [hovered, setHovered] = useState(false)
   const [angle, setAngle] = useState(Math.random() * Math.PI * 2)
-  const { focusOnObject, zoomedStar } = useStarStore()
+  const { focusOnObject, zoomedStar, enterLowerMiddle, leaveLowerMiddle } = useStarStore()
 
   const isVoidstar = zoomedStar?.name === "Voidstar"
   
@@ -261,6 +262,19 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
         surfaceRef.current.position.x = x
         surfaceRef.current.position.z = z
         surfaceRef.current.position.y = 0
+      }
+
+      // Check if planet is in lower-middle sector of orbit on the opposite side (use positive Z)
+      // Conditions: deep positive Z AND small |X| relative to radius
+      const isBottom = z > orbitRadius * 0.9
+      const isCenteredHorizontally = Math.abs(x) < orbitRadius * 0.25
+      const isPlanetInLowerMiddle = isBottom && isCenteredHorizontally
+      
+      if (isPlanetInLowerMiddle) {
+        enterLowerMiddle(planet.id)
+      } else {
+        // Immediately clear when this planet is out of the lower-middle sector
+        leaveLowerMiddle(planet.id)
       }
 
       // Realistic planet rotation with different speeds for layers
@@ -543,11 +557,22 @@ function OrbitRings({ planets, starColor }: { planets: PlanetData[]; starColor: 
       {planets.map((planet, i) => {
         const base = ORBIT_BASE + i * ORBIT_SPACING
         const r = base + (i === 0 ? ORBIT_FIRST_EXTRA : 0)
+        // Lower-middle detection marker position: x ~ 0, z positive and deep (~ +0.9 * r)
+        const markerPos: [number, number, number] = [0, 0, r * 0.9]
         return (
-          <mesh key={`ring-${planet.id}`} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[r - 0.05, r + 0.05, 64]} />
-            <meshBasicMaterial color="#FFFFFF" transparent opacity={0.6} side={2} />
-          </mesh>
+          <group key={`ring-${planet.id}`}>
+            {/* Orbit ring */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]}>
+              <ringGeometry args={[r - 0.05, r + 0.05, 64]} />
+              <meshBasicMaterial color="#FFFFFF" transparent opacity={0.6} side={2} />
+            </mesh>
+
+            {/* Lower-middle detection marker */}
+            <mesh position={markerPos}>
+              <sphereGeometry args={[0.06, 16, 16]} />
+              <meshBasicMaterial color="#22D3EE" transparent opacity={0.9} />
+            </mesh>
+          </group>
         )
       })}
     </group>
@@ -813,11 +838,11 @@ function CentralStar({ star }: { star: StarData }) {
 
       {hovered && (
         <Html position={[0, 5, 0]} center distanceFactor={15}>
-          <div className="bg-black/90 text-white px-4 py-3 rounded-lg text-sm font-medium border border-white/30 backdrop-blur-sm">
+          <div className="bg-cyan-900/70 text-white px-4 py-3 rounded-lg text-sm font-medium border border-cyan-400/30 backdrop-blur-sm">
             <div className="font-bold text-lg">{star.name}</div>
             <div className="text-xs text-white/70 mt-1">{star.type}</div>
             <div className="text-xs text-white/60">Temperature: {starVisuals.temperature.toLocaleString()}K</div>
-            <div className="text-xs text-blue-400 mt-2">Click to explore in detail</div>
+            <div className="text-xs text-cyan-400 mt-2">Click to explore in detail</div>
           </div>
         </Html>
       )}
@@ -844,10 +869,10 @@ function StarSystemInfo({ star }: { star: StarData }) {
   }
 
   return (
-    <div className="fixed top-20 right-4 z-50 bg-black/95 text-white p-6 rounded-lg border border-white/30 backdrop-blur-sm max-w-sm">
+    <div className="fixed top-20 right-4 z-50 bg-cyan-900/20 text-white p-6 rounded-lg border border-cyan-400/30 backdrop-blur-sm max-w-sm">
       <div className="mb-6">
         <h2
-          className="text-2xl font-bold mb-3 text-white cursor-pointer hover:text-blue-400 transition-colors"
+          className="text-2xl font-bold mb-3 text-white cursor-pointer hover:text-cyan-400 transition-colors"
           onClick={handleStarClick}
         >
           {star.name}
@@ -866,16 +891,16 @@ function StarSystemInfo({ star }: { star: StarData }) {
             {star.planetData.map((planet, index) => (
               <div
                 key={planet.id}
-                className="border-l-2 border-orange-500/50 pl-4 cursor-pointer hover:bg-white/5 rounded p-2 transition-colors"
+                className="border-l-2 border-cyan-400/40 pl-4 cursor-pointer hover:bg-cyan-500/5 rounded p-2 transition-colors"
                 onClick={() => handlePlanetClick(planet)}
               >
-                <div className="font-medium text-base text-orange-400 mb-1">{planet.name}</div>
+                <div className="font-medium text-base text-cyan-300 mb-1">{planet.name}</div>
                 <div className="text-xs text-white/70 space-y-1">
                   <div>{planet.type}</div>
                   <div>{planet.distance.toFixed(2)} AU from star</div>
                   {planet.temperature && <div>~{Math.round(planet.temperature)}K</div>}
                 </div>
-                <div className="text-xs text-blue-400 mt-1">Click to explore</div>
+                <div className="text-xs text-cyan-400 mt-1">Click to explore</div>
               </div>
             ))}
           </div>
@@ -919,7 +944,7 @@ export function StarSystem() {
 }
 
 export function StarSystemUI() {
-  const { zoomedStar, returnToSpace, currentView } = useStarStore()
+  const { zoomedStar, returnToSpace, currentView, navigationSource } = useStarStore()
 
   if (currentView !== "star-system" || !zoomedStar) return null
 
@@ -938,6 +963,16 @@ export function StarSystemUI() {
       </div>
 
       <StarSystemInfo star={zoomedStar} />
+
+      {/* Transit Chart - Only show when coming from exoplanet detection */}
+      {navigationSource === "exoplanet-detection" && (
+        <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-[60]">
+          <TransitChart 
+            planetName={zoomedStar.planetData?.[0]?.name || "Voidstar b"}
+            starName={zoomedStar.name}
+          />
+        </div>
+      )}
     </>
   )
 }

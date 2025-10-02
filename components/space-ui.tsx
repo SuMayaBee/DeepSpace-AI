@@ -263,7 +263,7 @@ export function SpaceUI() {
       {/* AI Analysis Side Panel */}
       {aiModalOpen && (
         <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-30 w-96">
-          <Card className="bg-gradient-to-br from-black/90 via-gray-900/90 to-black/90 border border-cyan-400/30 text-white backdrop-blur-xl shadow-2xl shadow-cyan-500/10">
+          <Card className="bg-cyan-900/20 border border-cyan-400/30 text-white backdrop-blur-sm shadow-2xl">
             <CardContent className="p-4">
               <div className="flex flex-col gap-4">
                 {/* Enhanced Header */}
@@ -358,7 +358,7 @@ export function SpaceUI() {
       {/* AI Method Findings Display - Center Screen */}
       {hoveredMethod && (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40">
-          <Card className="bg-gradient-to-br from-black/95 via-gray-900/95 to-black/95 border border-white/30 text-white backdrop-blur-xl shadow-2xl max-w-lg">
+          <Card className="bg-cyan-900/20 border border-cyan-400/30 text-white backdrop-blur-sm shadow-2xl max-w-lg">
             <CardContent className="p-6">
               {(() => {
                 const methodData = detectionData.find(m => m.method === hoveredMethod)
@@ -862,7 +862,7 @@ export function SpaceUI() {
       <div className="fixed top-4 right-4 z-20">
         <button
           onClick={() => setShowLiveDetections(!showLiveDetections)}
-          className="bg-black/30 border border-white/20 text-white backdrop-blur-md hover:bg-black/40 transition-all duration-300 rounded-lg px-4 py-3 flex items-center gap-3"
+          className="bg-cyan-900/30 border border-cyan-400/30 text-white backdrop-blur-md hover:bg-cyan-900/40 transition-all duration-300 rounded-lg px-4 py-3 flex items-center gap-3"
         >
           <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
           <div>
@@ -873,8 +873,8 @@ export function SpaceUI() {
         </button>
         
         {showLiveDetections && (
-          <div className="absolute top-full right-0 mt-2 w-96 bg-black/90 border border-white/20 rounded-lg backdrop-blur-md shadow-2xl max-h-96 overflow-y-auto">
-            <div className="p-4 border-b border-white/10">
+          <div className="absolute top-full right-0 mt-2 w-96 bg-cyan-900/60 border border-cyan-400/30 rounded-lg backdrop-blur-md shadow-2xl max-h-96 overflow-y-auto">
+            <div className="p-4 border-b border-cyan-400/20">
               <div className="flex items-center justify-between">
                 <h3 className="text-white font-semibold">Recent Detections</h3>
                 <Badge className="bg-green-500/20 text-green-400 border-green-400/30">
@@ -885,7 +885,7 @@ export function SpaceUI() {
             </div>
             <div className="max-h-80 overflow-y-auto">
               {recentDetections.map((detection, index) => (
-                <div key={index} className="p-4 border-b border-white/5 hover:bg-white/5 transition-colors">
+                <div key={index} className="p-4 border-b border-cyan-400/10 hover:bg-cyan-500/5 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -933,7 +933,7 @@ export function SpaceUI() {
 
       {/* Upper middle - Milky Way Galaxy info */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-10">
-        <Card className="bg-black/20 border-white/30 text-white backdrop-blur-sm">
+        <Card className="bg-cyan-900/20 border-cyan-400/30 text-white backdrop-blur-sm">
           <CardContent className="p-2">
             <div className="flex items-center gap-6">
               {/* Header */}
@@ -992,8 +992,8 @@ export function SpaceUI() {
           {/* Planet Type Card */}
           <div className="relative">
             <Card 
-              className={`bg-black/20 border-white/30 text-white backdrop-blur-sm cursor-pointer transition-all hover:bg-white/10 ${
-                planetTypeOpen ? 'bg-purple-600/40 border-purple-400/50' : ''
+              className={`bg-cyan-900/30 border-cyan-400/30 text-white backdrop-blur-sm cursor-pointer transition-all hover:bg-cyan-900/40 ${
+                planetTypeOpen ? 'bg-cyan-900/40 border-cyan-400/60' : ''
               }`}
               onClick={() => setPlanetTypeOpen(!planetTypeOpen)}
             >
@@ -1009,7 +1009,7 @@ export function SpaceUI() {
             </Card>
             
             {planetTypeOpen && (
-              <div className="absolute bottom-full left-0 mb-2 bg-black/90 border border-white/30 rounded backdrop-blur-md z-20 min-w-[180px]">
+              <div className="absolute bottom-full left-0 mb-2 bg-cyan-900/60 border border-cyan-400/30 rounded backdrop-blur-md z-20 min-w-[180px]">
                 {[
                   "All Types",
                   "O-type (Blue Giants)",
@@ -1026,7 +1026,7 @@ export function SpaceUI() {
                       e.stopPropagation()
                       handleFilterChange("planet", type)
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-white/80 hover:bg-white/10 hover:text-white transition-colors first:rounded-t last:rounded-b"
+                    className="w-full text-left px-3 py-2 text-xs text-white/80 hover:bg-cyan-500/10 hover:text-white transition-colors first:rounded-t last:rounded-b"
                   >
                     {type}
                   </button>
@@ -1038,8 +1038,8 @@ export function SpaceUI() {
           {/* Missions Card */}
           <div className="relative">
             <Card 
-              className={`bg-black/20 border-white/30 text-white backdrop-blur-sm cursor-pointer transition-all hover:bg-white/10 ${
-                missionOpen ? 'bg-blue-600/40 border-blue-400/50' : ''
+              className={`bg-cyan-900/30 border-cyan-400/30 text-white backdrop-blur-sm cursor-pointer transition-all hover:bg-cyan-900/40 ${
+                missionOpen ? 'bg-cyan-900/40 border-cyan-400/60' : ''
               }`}
               onClick={() => setMissionOpen(!missionOpen)}
             >
@@ -1054,7 +1054,7 @@ export function SpaceUI() {
             </Card>
             
             {missionOpen && (
-              <div className="absolute bottom-full left-0 mb-2 bg-black/90 border border-white/30 rounded backdrop-blur-md z-20 min-w-[140px]">
+              <div className="absolute bottom-full left-0 mb-2 bg-cyan-900/60 border border-cyan-400/30 rounded backdrop-blur-md z-20 min-w-[140px]">
                 {[
                   "All Missions",
                   "Kepler Mission",
@@ -1066,7 +1066,7 @@ export function SpaceUI() {
                       e.stopPropagation()
                       handleFilterChange("mission", mission)
                     }}
-                    className="w-full text-left px-3 py-2 text-xs text-white/80 hover:bg-white/10 hover:text-white transition-colors first:rounded-t last:rounded-b"
+                    className="w-full text-left px-3 py-2 text-xs text-white/80 hover:bg-cyan-500/10 hover:text-white transition-colors first:rounded-t last:rounded-b"
                   >
                     {mission}
                   </button>
@@ -1078,7 +1078,7 @@ export function SpaceUI() {
           {/* Exoplanet Detection Card */}
           <div className="relative">
             <Card 
-              className="bg-black/20 border-white/30 text-white backdrop-blur-sm cursor-pointer transition-all hover:bg-white/10"
+              className="bg-cyan-900/30 border-cyan-400/30 text-white backdrop-blur-sm cursor-pointer transition-all hover:bg-cyan-900/40"
               onClick={() => goToExoplanetDetection()}
             >
               <CardContent className="p-3">

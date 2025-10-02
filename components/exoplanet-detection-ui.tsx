@@ -38,62 +38,62 @@ export function ExoplanetDetectionUI() {
     "Orbital Period": {
       description: "Time for planet to complete one orbit around its star",
       importance: "Determines planet's year length and habitability zone",
-      color: "blue"
+      color: "pink"
     },
     "Transit Depth": {
       description: "Amount of starlight blocked when planet passes in front",
       importance: "Indicates planet size relative to its star",
-      color: "green"
+      color: "purple"
     },
     "Transit Duration": {
       description: "How long the planet takes to cross the star's disk",
       importance: "Reveals orbital distance and planet size",
-      color: "purple"
+      color: "orange"
     },
     "Planet Radius": {
       description: "Physical size of the exoplanet",
       importance: "Key factor in determining planet type and composition",
-      color: "orange"
+      color: "green"
     },
     "Signal-to-Noise": {
       description: "Quality of the detection signal vs background noise",
       importance: "Higher values mean more reliable detections",
-      color: "pink"
+      color: "blue"
     },
     "Impact Parameter": {
       description: "How close the planet passes to the star's center",
       importance: "Affects transit shape and detection probability",
-      color: "yellow"
+      color: "cyan"
     },
     "Inclination": {
       description: "Angle of planet's orbit relative to our line of sight",
       importance: "Determines if we can observe transits",
-      color: "indigo"
+      color: "pink"
     },
     "Stellar Temperature": {
       description: "Surface temperature of the host star",
       importance: "Affects planet's surface temperature and habitability",
-      color: "teal"
+      color: "purple"
     },
     "Stellar Radius": {
       description: "Size of the host star",
       importance: "Used to calculate planet size from transit depth",
-      color: "lime"
+      color: "orange"
     },
     "Stellar Mass": {
       description: "Mass of the host star",
       importance: "Determines orbital dynamics and planet formation",
-      color: "sky"
+      color: "green"
     },
     "Surface Gravity": {
       description: "Gravitational pull at the star's surface",
       importance: "Affects stellar evolution and planet retention",
-      color: "emerald"
+      color: "blue"
     },
     "Metallicity": {
       description: "Amount of heavy elements in the star",
       importance: "Indicates likelihood of rocky planet formation",
-      color: "violet"
+      color: "cyan"
     }
   }
 
@@ -187,14 +187,14 @@ export function ExoplanetDetectionUI() {
 
       {/* Page Title */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[60]">
-        <h1 className="text-2xl font-bold text-white bg-black/50 px-6 py-2 rounded-lg backdrop-blur-sm border border-white/20">
+        <h1 className="text-2xl font-bold text-white bg-cyan-900/30 px-6 py-2 rounded-lg backdrop-blur-sm border border-cyan-400/30 transition-all duration-500 hover:bg-cyan-900/40">
           Exoplanet Detection Model
         </h1>
       </div>
 
       {/* Mission Filter - Left Bottom */}
       <div className="fixed bottom-4 left-4 z-[60]">
-        <Card className="bg-black/50 border-white/20 backdrop-blur-sm">
+        <Card className="bg-cyan-900/30 border-cyan-400/30 backdrop-blur-sm transition-all duration-500 hover:bg-cyan-900/40">
           <CardHeader className="pb-2">
             <CardTitle className="text-white text-sm flex items-center gap-2">
               <Filter className="w-4 h-4" />
@@ -225,15 +225,15 @@ export function ExoplanetDetectionUI() {
 
       {/* Left Panel - AI Model Training Parameters */}
       <div className="fixed top-20 left-4 z-[60]">
-        <Card className="bg-black/50 border-white/20 backdrop-blur-sm transition-all duration-500 hover:bg-black/60 w-64">
+        <Card className="bg-cyan-900/30 border-cyan-400/30 backdrop-blur-sm transition-all duration-500 hover:bg-cyan-900/40 w-64">
           <CardHeader className="pb-2">
-            <CardTitle className="text-white text-sm flex items-center gap-2">
-              <Zap className="w-4 h-4 text-cyan-400 animate-pulse" />
+            <CardTitle className="text-white text-lg md:text-xl flex items-center gap-2 font-semibold">
+              <Zap className="w-5 h-5 text-cyan-400 animate-pulse" />
               AI Model Training Parameters
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0 space-y-2">
-            <div className="text-xs text-cyan-300/80 italic mb-3">
+            <div className="text-sm text-cyan-300/90 italic mb-3 font-medium">
               Trained on NASA Kepler & TESS datasets
             </div>
             
@@ -254,7 +254,7 @@ export function ExoplanetDetectionUI() {
 
       {/* Right Panel - AI Detection Results */}
       <div className="fixed top-20 right-4 z-[60]">
-        <Card className="bg-black/50 border-white/20 backdrop-blur-sm transition-all duration-500 hover:bg-black/60 w-72">
+        <Card className="bg-cyan-900/30 border-cyan-400/30 backdrop-blur-sm transition-all duration-500 hover:bg-cyan-900/40 w-72">
           <CardHeader className="pb-2">
             <CardTitle className="text-white text-sm flex items-center gap-2">
               <Brain className="w-4 h-4 animate-pulse" />
