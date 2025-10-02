@@ -39,7 +39,7 @@ type FocusTarget = {
 interface StarStore {
   selectedStar: StarData | null
   hoveredStar: StarData | null
-  currentView: "space" | "star-system" | "focused-object"
+  currentView: "space" | "star-system" | "focused-object" | "exoplanet-detection"
   zoomedStar: StarData | null
   focusedObject: FocusTarget | null
   isFilterSpinning: boolean
@@ -49,6 +49,7 @@ interface StarStore {
   focusOnObject: (target: FocusTarget) => void
   returnToStarSystem: () => void
   returnToSpace: () => void
+  goToExoplanetDetection: () => void
   triggerFilterSpin: () => void
 }
 
@@ -83,6 +84,13 @@ export const useStarStore = create<StarStore>((set, get) => ({
   returnToSpace: () =>
     set({
       currentView: "space",
+      zoomedStar: null,
+      selectedStar: null,
+      focusedObject: null,
+    }),
+  goToExoplanetDetection: () =>
+    set({
+      currentView: "exoplanet-detection",
       zoomedStar: null,
       selectedStar: null,
       focusedObject: null,

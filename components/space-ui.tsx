@@ -3,11 +3,11 @@
 import { useStarStore } from "@/lib/star-store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Star, ChevronDown, ChevronUp, Brain, Zap, TrendingUp, BarChart3, Activity } from "lucide-react"
+import { Star, ChevronDown, ChevronUp, Brain, Zap, TrendingUp, BarChart3, Activity, Orbit, Satellite, BotMessageSquare } from "lucide-react"
 import { useState, useEffect } from "react"
 
 export function SpaceUI() {
-  const { hoveredStar, triggerFilterSpin } = useStarStore()
+  const { hoveredStar, triggerFilterSpin, goToExoplanetDetection, currentView } = useStarStore()
   const [planetTypeOpen, setPlanetTypeOpen] = useState(false)
   const [missionOpen, setMissionOpen] = useState(false)
   const [selectedFilter, setSelectedFilter] = useState("All")
@@ -207,6 +207,11 @@ export function SpaceUI() {
 
     return () => clearInterval(interval)
   }, [])
+
+  // Hide UI when in exoplanet detection view
+  if (currentView === "exoplanet-detection") {
+    return null
+  }
 
   return (
     <>
@@ -980,6 +985,7 @@ export function SpaceUI() {
         </Card>
       </div>
 
+
       {/* Bottom left - Filter panel */}
       <div className="fixed left-4 bottom-4 z-10">
         <div className="flex gap-3">
@@ -992,9 +998,9 @@ export function SpaceUI() {
               onClick={() => setPlanetTypeOpen(!planetTypeOpen)}
             >
               <CardContent className="p-3">
-                <div className="flex flex-col items-center text-center min-w-[80px]">
-                  <div className="w-8 h-8 bg-purple-600/20 rounded-full flex items-center justify-center mb-2">
-                    <div className="w-4 h-4 bg-purple-400 rounded-full"></div>
+                <div className="flex flex-col items-center text-center min-w-[80px] h-[80px] justify-center">
+                  <div className="w-10 h-10 bg-purple-600/20 rounded-full flex items-center justify-center mb-2">
+                    <Orbit className="w-6 h-6 text-purple-400" />
                   </div>
                   <div className="text-xs font-medium text-white">Planet</div>
                   <div className="text-xs font-medium text-white">Type</div>
@@ -1038,9 +1044,9 @@ export function SpaceUI() {
               onClick={() => setMissionOpen(!missionOpen)}
             >
               <CardContent className="p-3">
-                <div className="flex flex-col items-center text-center min-w-[80px]">
-                  <div className="w-8 h-8 bg-blue-600/20 rounded-full flex items-center justify-center mb-2">
-                    <div className="w-4 h-4 bg-blue-400 rounded-sm"></div>
+                <div className="flex flex-col items-center text-center min-w-[80px] h-[80px] justify-center">
+                  <div className="w-10 h-10 bg-blue-600/40 rounded-full flex items-center justify-center mb-2">
+                    <Satellite className="w-6 h-6 text-blue-300" />
                   </div>
                   <div className="text-xs font-medium text-white">Missions</div>
                 </div>
@@ -1067,6 +1073,24 @@ export function SpaceUI() {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Exoplanet Detection Card */}
+          <div className="relative">
+            <Card 
+              className="bg-black/20 border-white/30 text-white backdrop-blur-sm cursor-pointer transition-all hover:bg-white/10"
+              onClick={() => goToExoplanetDetection()}
+            >
+              <CardContent className="p-3">
+                <div className="flex flex-col items-center text-center min-w-[80px] h-[80px] justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-green-500 rounded-full flex items-center justify-center mb-2">
+                    <BotMessageSquare className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-xs font-medium text-white">Exoplanet</div>
+                  <div className="text-xs font-medium text-white">Detection</div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

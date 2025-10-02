@@ -10,6 +10,8 @@ import { CameraController } from "@/components/camera-controller"
 import { StarInfoPanel } from "@/components/star-info-panel"
 import { SpaceUI } from "@/components/space-ui"
 import { DynamicLighting } from "@/components/dynamic-lighting"
+import { ExoplanetDetection } from "@/components/exoplanet-detection"
+import { ExoplanetDetectionUI } from "@/components/exoplanet-detection-ui"
 import { useStarStore } from "@/lib/star-store"
 
 export default function HomePage() {
@@ -44,6 +46,8 @@ export default function HomePage() {
         return [0, 15, 25]
       case "focused-object":
         return [0, 0, 15]
+      case "exoplanet-detection":
+        return [0, 20, 40]
       default:
         return [0, 0, 120]
     }
@@ -63,6 +67,14 @@ export default function HomePage() {
         return {
           minDistance: 8,
           maxDistance: 30,
+          enablePan: true,
+          enableZoom: true,
+          enableRotate: true,
+        }
+      case "exoplanet-detection":
+        return {
+          minDistance: 15,
+          maxDistance: 80,
           enablePan: true,
           enableZoom: true,
           enableRotate: true,
@@ -134,6 +146,14 @@ export default function HomePage() {
             </>
           )}
 
+          {currentView === "exoplanet-detection" && (
+            <>
+              <Environment preset="sunset" background={false} />
+              <Stars radius={200} depth={100} count={2000} factor={4} saturation={0.8} fade={true} />
+              <ExoplanetDetection />
+            </>
+          )}
+
           <OrbitControls
             enablePan={orbitSettings.enablePan}
             enableZoom={orbitSettings.enableZoom}
@@ -152,6 +172,7 @@ export default function HomePage() {
       <SpaceUI />
       <StarSystemUI />
       <FocusedObjectUI />
+      <ExoplanetDetectionUI />
     </div>
   )
 }
