@@ -96,7 +96,7 @@ function OrbitingPlanet({ planet, starColor, index }: { planet: PlanetData; star
     setAngle((prev) => prev + planet.orbitSpeed * 0.01)
 
     if (planetRef.current) {
-      const orbitRadius = planet.distance * 8
+      const orbitRadius = planet.distance * 2 + 3
       const x = Math.cos(angle) * orbitRadius
       const z = Math.sin(angle) * orbitRadius
       
@@ -507,7 +507,7 @@ function OrbitRings({ planets, starColor }: { planets: PlanetData[]; starColor: 
     <group>
       {planets.map((planet) => (
         <mesh key={`ring-${planet.id}`} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[planet.distance * 8 - 0.05, planet.distance * 8 + 0.05, 64]} />
+          <ringGeometry args={[planet.distance * 2 + 3 - 0.05, planet.distance * 2 + 3 + 0.05, 64]} />
           <meshBasicMaterial color="#FFFFFF" transparent opacity={0.6} side={2} />
         </mesh>
       ))}
