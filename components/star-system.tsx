@@ -890,6 +890,11 @@ export function StarSystem() {
 
   if (!zoomedStar || !zoomedStar.planetData) return null
 
+  // Calculate the radius for the green zone outside the last orbit
+  const lastOrbitIndex = zoomedStar.planetData.length - 1
+  const lastOrbitRadius = ORBIT_BASE + lastOrbitIndex * ORBIT_SPACING + (lastOrbitIndex === 0 ? ORBIT_FIRST_EXTRA : 0)
+  const greenZoneRadius = lastOrbitRadius + 1.5 // Add some padding outside the last orbit
+
   return (
     <group>
       <CentralStar star={zoomedStar} />
@@ -899,6 +904,16 @@ export function StarSystem() {
       {zoomedStar.planetData.map((planet, index) => (
         <OrbitingPlanet key={planet.id} planet={planet} starColor={zoomedStar.color} index={index} />
       ))}
+
+      {/* Light green zone outside the last orbit */}
+      <mesh>
+        <sphereGeometry args={[greenZoneRadius, 32, 32]} />
+        <meshBasicMaterial
+          color="#00FF00"
+          transparent
+          opacity={0.08}
+        />
+      </mesh>
     </group>
   )
 }
