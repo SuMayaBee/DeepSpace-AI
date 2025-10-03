@@ -1,6 +1,7 @@
 # DeepSpaceAI
 
 An innovative, AI-powered platform aimed at revolutionizing the detection and understanding of exoplanets by leveraging advanced machine learning techniques and data from NASA's TESS, Kepler, and K2 missions.
+
 ![1b7a350c-80a4-4516-99e5-9b34b4c76d8b](https://github.com/user-attachments/assets/a348c201-7124-4df8-9fd6-9a6f8a677b56)
 
 
